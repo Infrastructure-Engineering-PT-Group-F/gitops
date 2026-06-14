@@ -1,0 +1,58 @@
+---
+# Syntactic + schema validation for this repo's YAML and Kubernetes manifests.
+# yamllint:    https://yamllint.readthedocs.io/
+# kubeconform: https://github.com/yannh/kubeconform
+name: manifest-lint
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  yamllint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pipx install yamllint==1.38.0
+
+      - name: Run yamllint
+        run: yamllint -c .yamllint .
+
+  kubeconform:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install kubeconform
+        env:
+          KUBECONFORM_VERSION: v0.8.0
+        run: |
+          set -euo pipefail
+          curl -sSL \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin kubeconform
+
+      # Validate manifests under the GitOps content dirs only (skips CI/config
+      # YAML). CRD schemas (ArgoCD, Crossplane, cert-manager, ESO, CNPG) come
+      # from the Datree catalog; -ignore-missing-schemas tolerates the rest.
+      - name: Validate Kubernetes manifests
+        run: |
+          set -euo pipefail
+          files=$(find bootstrap platform catalog tenants -type f \
+            \( -name '*.yaml' -o -name '*.yml' \) 2>/dev/null || true)
+          if [ -z "$files" ]; then
+            echo "No manifests to validate yet."
+            exit 0
+          fi
+          echo "$files" | xargs kubeconform \
+            -strict \
+            -ignore-missing-schemas \
+            -schema-location default \
+            -schema-location \
+            'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            -summary
