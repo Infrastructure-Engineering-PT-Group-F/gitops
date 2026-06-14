@@ -1,0 +1,15 @@
+---
+# yamllint config for the gitops repo.
+# Starts from the upstream "default" ruleset and relaxes two rules so that
+# GitHub Actions workflows (which use `on:` and longer `run:` lines) pass:
+#   https://yamllint.readthedocs.io/en/stable/configuration.html
+extends: default
+
+rules:
+  # `on:` in workflows is a YAML 1.1 truthy keyword; don't flag mapping keys.
+  truthy:
+    check-keys: false
+  # Manifests and CI lines run long; warn rather than fail.
+  line-length:
+    max: 120
+    level: warning

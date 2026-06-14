@@ -23,3 +23,42 @@ directory once per clone:
 
 `.githooks/commit-msg` is a dependency-free POSIX script and runs under Linux,
 macOS, and Git for Windows' bundled bash. CI remains the authoritative gate.
+
+## YAML & manifest conventions
+
+These keep the `manifest-lint` CI (yamllint + kubeconform) green. Run both
+locally before pushing.
+
+### YAML style (enforced by `.yamllint`)
+
+- Start every file with `---`.
+- Indent with 2 spaces - never tabs.
+- No trailing whitespace - end the file with a single newline.
+- Keep lines ≤ 120 chars (over that is a warning - wrap where practical - long
+  URLs may exceed).
+- No duplicate keys in a mapping.
+- Use `true`/`false` for booleans (not `yes`/`no`/`on`/`off`).
+- Quote values that must stay strings but look like numbers/bools/versions
+  (e.g. `"true"`, `"v1.2"`, `"0755"`).
+- Files are stored LF (enforced by `.gitattributes`) - set your editor to LF.
+
+### Kubernetes manifests (enforced by `kubeconform -strict`)
+
+- Put real Kubernetes manifests only under `bootstrap/`, `platform/`,
+  `catalog/`, `tenants/` - those are the dirs CI schema-checks. CI/config YAML
+  lives elsewhere (it is still yamllint-checked).
+- Set a correct `apiVersion` and `kind`, and include all required fields.
+- `-strict` rejects unknown/extra fields: no typos in field names, no stray keys.
+- Use correct types - integers for `replicas`/ports, not strings.
+- Separate multiple documents in one file with `---`.
+- CRDs are validated only if their schema is in the Datree catalog - otherwise
+  kubeconform **skips** them (not validated). When you add custom CRDs/XRDs,
+  add a `-schema-location` for their schemas so they are actually checked.
+
+### Run locally
+
+    yamllint -c .yamllint .
+    kubeconform -strict -ignore-missing-schemas \
+      -schema-location default \
+      -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+      $(find bootstrap platform catalog tenants -type f \( -name '*.yaml' -o -name '*.yml' \))
