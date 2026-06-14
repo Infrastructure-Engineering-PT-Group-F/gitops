@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+
+msg_file="$1"
+
+# Drop git's comment lines, then take the first non-blank line as the subject.
+body="$(sed '/^#/d' "$msg_file")"
+subject="$(printf '%s\n' "$body" | sed '/^[[:space:]]*$/d' | head -n 1)"
+
+types='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
+
+fail() { printf 'commit-msg: %s\n' "$1" >&2; }
+
+ok=1
+
+# 1) Conventional Commits header: <type>(<optional scope>)<optional !>: <text>
+if ! printf '%s' "$subject" | grep -Eq "^(${types})(\([^)]+\))?!?: .+"; then
+  fail "subject must be '<type>(<scope>): <description>'"
+  fail "  type one of: feat fix docs style refactor perf test build ci chore revert"
+  fail "  got: ${subject}"
+  ok=0
+fi
+
+# 2) Header length (config-conventional default is 100).
+if [ "$(printf '%s' "$subject" | wc -c)" -gt 100 ]; then
+  fail "subject is longer than 100 characters"
+  ok=0
+fi
+
+# 3) Assignment rule: reference a GitHub issue, e.g. '#42' or 'Refs #42'.
+if ! printf '%s' "$body" | grep -Eq '#[0-9]+'; then
+  fail "message must reference an issue (e.g. '#42' or 'Refs #42')"
+  ok=0
+fi
+
+[ "$ok" -eq 1 ] || exit 1
+exit 0
