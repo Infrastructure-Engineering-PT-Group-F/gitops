@@ -9,7 +9,7 @@ this repo is applied to the cluster by ArgoCD, not by hand.
 | Path | Purpose |
 |------|---------|
 | `bootstrap/` | Root **App-of-Apps** — the single ArgoCD `Application` (installed once by the infrastructure repo) that points ArgoCD at `platform/` and `catalog/`. |
-| `platform/` | Cluster **platform add-ons** as ArgoCD `Application`s (Helm): ingress-nginx, cert-manager, External Secrets, ExternalDNS, Crossplane, CloudNativePG. |
+| `platform/` | Cluster **platform add-ons** as ArgoCD `Application`s (Helm): ingress-nginx, cert-manager, External Secrets, ExternalDNS, Crossplane. |
 | `catalog/` | Crossplane **service catalog** — XRDs + Compositions that define what a "tenant" is. |
 | `tenants/` | Per-tenant **claims** |
 
