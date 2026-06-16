@@ -1,7 +1,7 @@
 # tenants
 
-Per-tenant **claims** against the `catalog/` abstraction. One subfolder
-per tenant. 
+Per-tenant **Composite Resources (XRs)** against the `catalog/` abstraction. One subfolder per tenant.
+
 
 - `staging/` — permanent staging tenant. Validate new app versions here before
   promoting to production tenants.
