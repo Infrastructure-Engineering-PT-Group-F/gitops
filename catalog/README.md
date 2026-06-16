@@ -5,7 +5,7 @@ The Crossplane **service catalog**: the abstraction that defines what a
 underlying resources.
 
 - `xrds/` — Composite Resource Definitions (the tenant API + its OpenAPIv3 schema)
-- `compositions/` — Compositions that turn a tenant claim into real resources:
+- `compositions/` — Compositions that turn a tenant Composite Resource (XR) into real resources:
   namespace, NetworkPolicies, ResourceQuota/LimitRange, 
   and the backend/frontend Helm releases.
 
