@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  annotations:
+    # Install after Envoy Gateway provides the Gateway API CRDs.
+    argocd.argoproj.io/sync-wave: "-5"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/external-dns/
+    chart: external-dns
+    targetRevision: 1.21.1
+    helm:
+      releaseName: external-dns
+      values: |
+        provider:
+          name: google
+        sources:
+          - gateway-httproute
+        domainFilters:
+          - gcp.ajdininfrastructure.lol
+        policy: upsert-only
+        registry: txt
+        txtOwnerId: gitops-platform-gcp
+        logFormat: json
+        serviceAccount:
+          create: true
+          name: external-dns
+          annotations:
+            iam.gke.io/gcp-service-account: "external-dns-sa@project-03eb5b2f-b0b9-4171-b14.iam.gserviceaccount.com"
+        secretConfiguration:
+          enabled: false
+        extraArgs:
+          google-zone-visibility: public
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-dns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
