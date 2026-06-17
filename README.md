@@ -8,8 +8,7 @@ cluster by ArgoCD, not by hand.
 
 | Path | Purpose |
 |------|---------|
-| `bootstrap/` | Platform add-on App-of-Apps manifests installed by Terraform after ArgoCD is bootstrapped. |
-| `platform/` | Cluster platform add-ons as ArgoCD `Application`s (Helm): ingress-nginx, cert-manager, External Secrets, ExternalDNS, Crossplane. |
+| `platform/` | Cluster platform add-ons as ArgoCD `Application`s (Helm): Envoy Gateway, Crossplane. |
 | `catalog/` | Crossplane service catalog - XRDs + Compositions that define what a "tenant" is. |
 | `tenants/` | Per-tenant Composite Resources (XRs) |
 
@@ -21,10 +20,9 @@ automatically. See `tenants/README.md`.
 
 ## Root Application Ownership
 
-The bootstrap root App-of-Apps is owned by Terraform in the `infrastructure`
-repository and installed through the `argocd-apps` Helm chart. This repository
-owns only the child Application manifests under `platform/`, `catalog/`, and
-`tenants/`.
+Terraform in `Infrastructure-Engineering-PT-Group-F/infrastructure` creates and
+owns the root App-of-Apps directly. This repository owns only the child
+Application manifests under `platform/`, `catalog/`, and `tenants/`.
 
 ## Contributing
 
