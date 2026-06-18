@@ -14,9 +14,9 @@ applied directly by ArgoCD, so the staging tenant is reproducible either way.
 
 ## Namespace baseline
 
-Every tenant gets exactly one namespace. It is the foundation for the network
-policies (#6) and the resource quotas and limit ranges (#7), and it implements the
-multi-tenancy security concept (#4).
+Every tenant gets exactly one namespace. It is the foundation for the tenant
+network policies and the resource quotas and limit ranges and it implements the
+multi-tenancy security concept.
 
 ### Naming
 
@@ -37,7 +37,7 @@ platform namespaces such as `crossplane-system` or `external-secrets`. Examples:
 
 `enforce` is `baseline` for now because the app workloads do not yet set a full
 restricted security context. It can be raised to `restricted` once the backend and
-frontend pods comply (backend#11).
+frontend pods set a restricted-compatible security context.
 
 ### Annotations
 
@@ -53,7 +53,7 @@ Composition, so a single tenant resource provisions the namespace with this exac
 shape. `staging/namespace.yaml` is the canonical reference for that shape and
 doubles as the directly applied staging namespace until the Composition is in
 place. For ArgoCD to apply manifests under `tenants/`, the Terraform-owned root
-App-of-Apps must include this directory (infrastructure#41).
+App-of-Apps must include this directory.
 
 ## Add a tenant
 
