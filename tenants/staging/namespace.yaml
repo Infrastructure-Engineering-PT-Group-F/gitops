@@ -1,0 +1,29 @@
+---
+# Permanent staging tenant namespace.
+#
+# This file is the canonical "namespace baseline": the exact name, labels, and
+# annotations every tenant namespace must carry. In the target model the catalog
+# Composition (Crossplane) renders a namespace with this shape for each tenant
+# It is kept here as the reference and as the staging tenant, applied directly
+# by ArgoCD once the Terraform-owned root App-of-Apps includes tenants/.
+#
+# Naming convention: tenant-<name>
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tenant-staging
+  labels:
+    # Tenancy identity
+    platform.fh-burgenland.at/tenant: staging
+    platform.fh-burgenland.at/environment: staging
+    # Kubernetes well-known grouping
+    app.kubernetes.io/part-of: weather-app
+    # Pod Security Admission
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted
+  annotations:
+    platform.fh-burgenland.at/owner: "Infrastructure Engineering PT, Group F"
+    platform.fh-burgenland.at/description: >-
+      Permanent staging tenant. New application versions are validated here
+      before promotion to production tenants.
