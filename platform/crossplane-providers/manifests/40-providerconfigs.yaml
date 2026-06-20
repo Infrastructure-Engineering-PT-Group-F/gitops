@@ -1,0 +1,31 @@
+---
+apiVersion: kubernetes.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: kubernetes-provider
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  credentials:
+    source: InjectedIdentity
+---
+apiVersion: helm.crossplane.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: helm-provider
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  credentials:
+    source: InjectedIdentity
+---
+apiVersion: gcp.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: gcp-provider
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  projectID: project-03eb5b2f-b0b9-4171-b14
+  credentials:
+    source: InjectedIdentity
