@@ -33,7 +33,7 @@ spec:
                     tier: db-f1-micro
                     ipConfiguration:
                       ipv4Enabled: false
-                      privateNetwork: projects/project-03eb5b2f-b0b9-4171-b14/global/networks/vpc-platform
+                      privateNetwork: projects/dark-diagram-496907-k8/global/networks/vpc-platform
                 providerConfigRef:
                   kind: ClusterProviderConfig
                   name: default

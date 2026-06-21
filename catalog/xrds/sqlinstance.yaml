@@ -45,7 +45,7 @@ spec:
                         Self-link of the VPC the instance gets its private IP on.
                         Must match the infra `vpc_self_link` output and have the
                         Private Services Access connection established.
-                      default: projects/project-03eb5b2f-b0b9-4171-b14/global/networks/vpc-platform
+                      default: projects/dark-diagram-496907-k8/global/networks/vpc-platform
                     databaseName:
                       type: string
                       description: Name of the application database to create.
