@@ -32,7 +32,7 @@ spec:
           create: true
           name: external-dns
           annotations:
-            iam.gke.io/gcp-service-account: "external-dns-sa@project-03eb5b2f-b0b9-4171-b14.iam.gserviceaccount.com"
+            iam.gke.io/gcp-service-account: "external-dns-sa@dark-diagram-496907-k8.iam.gserviceaccount.com"
         secretConfiguration:
           enabled: false
         extraArgs:

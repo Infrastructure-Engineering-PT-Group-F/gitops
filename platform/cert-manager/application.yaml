@@ -23,7 +23,7 @@ spec:
         serviceAccount:
           name: cert-manager
           annotations:
-            iam.gke.io/gcp-service-account: cert-manager-dns01-sa@project-03eb5b2f-b0b9-4171-b14.iam.gserviceaccount.com
+            iam.gke.io/gcp-service-account: cert-manager-dns01-sa@dark-diagram-496907-k8.iam.gserviceaccount.com
         extraObjects:
           - |
             apiVersion: cert-manager.io/v1
@@ -44,7 +44,7 @@ spec:
                         - gcp.ajdininfrastructure.lol
                     dns01:
                       cloudDNS:
-                        project: project-03eb5b2f-b0b9-4171-b14
+                        project: dark-diagram-496907-k8
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager

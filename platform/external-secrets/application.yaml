@@ -23,7 +23,7 @@ spec:
         serviceAccount:
           name: external-secrets
           annotations:
-            iam.gke.io/gcp-service-account: external-secrets-sa@project-03eb5b2f-b0b9-4171-b14.iam.gserviceaccount.com
+            iam.gke.io/gcp-service-account: external-secrets-sa@dark-diagram-496907-k8.iam.gserviceaccount.com
         extraObjects:
           - |
             apiVersion: external-secrets.io/v1
@@ -35,7 +35,7 @@ spec:
             spec:
               provider:
                 gcpsm:
-                  projectID: project-03eb5b2f-b0b9-4171-b14
+                  projectID: dark-diagram-496907-k8
   destination:
     server: https://kubernetes.default.svc
     namespace: external-secrets

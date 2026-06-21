@@ -9,7 +9,7 @@ committed to Git. ArgoCD deploys the upstream Helm chart from
 
 - Provider: Google Cloud Secret Manager (`gcpsm`)
 - Store: a cluster-wide `ClusterSecretStore` named `gcp-secret-manager`
-- Project: `project-03eb5b2f-b0b9-4171-b14`
+- Project: `dark-diagram-496907-k8`
 
 The `ClusterSecretStore` is rendered through the chart `extraObjects` value, so
 it is reconciled by the same ArgoCD Application as the operator and is not an
@@ -20,7 +20,7 @@ orphan manifest.
 The chart creates the Kubernetes service account `external-secrets/external-secrets`
 and uses GKE Workload Identity, annotated with:
 
-    iam.gke.io/gcp-service-account: external-secrets-sa@project-03eb5b2f-b0b9-4171-b14.iam.gserviceaccount.com
+    iam.gke.io/gcp-service-account: external-secrets-sa@dark-diagram-496907-k8.iam.gserviceaccount.com
 
 The Google service account, its Workload Identity binding for
 `external-secrets/external-secrets` and the `roles/secretmanager.secretAccessor`
