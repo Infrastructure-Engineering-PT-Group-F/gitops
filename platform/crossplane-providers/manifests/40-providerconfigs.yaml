@@ -26,6 +26,6 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "10"
 spec:
-  projectID: project-03eb5b2f-b0b9-4171-b14
+  projectID: dark-diagram-496907-k8
   credentials:
     source: InjectedIdentity
