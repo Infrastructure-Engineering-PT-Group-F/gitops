@@ -27,11 +27,11 @@ rendering.
 
 Future Compositions must reference these ProviderConfig names:
 
-| ProviderConfig | API version | Authentication |
-|----------------|-------------|----------------|
-| `kubernetes-provider` | `kubernetes.crossplane.io/v1alpha1` | `InjectedIdentity` |
-| `helm-provider` | `helm.crossplane.io/v1beta1` | `InjectedIdentity` |
-| `gcp-provider` | `gcp.upbound.io/v1beta1` | `InjectedIdentity` with `projectID: project-03eb5b2f-b0b9-4171-b14` |
+| Config name | Kind / scope | API version | Authentication |
+|-------------|--------------|-------------|----------------|
+| `kubernetes-provider` | `ProviderConfig` | `kubernetes.crossplane.io/v1alpha1` | `InjectedIdentity` |
+| `helm-provider` | `ProviderConfig` | `helm.crossplane.io/v1beta1` | `InjectedIdentity` |
+| `default` | `ClusterProviderConfig` | `gcp.upbound.io/v1beta1` | `InjectedIdentity` with `projectID: dark-diagram-496907-k8` |
 
 ## Identity
 
@@ -51,7 +51,7 @@ local cluster with their Kubernetes ServiceAccounts.
 to the Google service account through GKE Workload Identity:
 
 ```text
-crossplane-system/provider-gcp -> crossplane-sa@project-03eb5b2f-b0b9-4171-b14.iam.gserviceaccount.com
+crossplane-system/provider-gcp -> crossplane-sa@dark-diagram-496907-k8.iam.gserviceaccount.com
 ```
 
 ## Security
