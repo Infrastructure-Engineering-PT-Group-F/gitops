@@ -7,7 +7,7 @@ cluster workloads. ArgoCD deploys the upstream Jetstack Helm chart from
 This add-on configures the `letsencrypt-staging-dns01` ClusterIssuer for
 Let's Encrypt DNS-01 validation through Google Cloud DNS. The solver is scoped
 to `gcp.ajdininfrastructure.lol` and uses Google Cloud project
-`project-03eb5b2f-b0b9-4171-b14`.
+`dark-diagram-496907-k8`.
 
 The ClusterIssuer is rendered through the cert-manager Helm chart
 `extraObjects` value, so it is reconciled by the same ArgoCD Application as the
@@ -18,14 +18,14 @@ The Google Cloud DNS permissions are provided by infrastructure issue
 `cert_manager_dns01_sa_email` Terraform output, expected to be:
 
 ```text
-cert-manager-dns01-sa@project-03eb5b2f-b0b9-4171-b14.iam.gserviceaccount.com
+cert-manager-dns01-sa@dark-diagram-496907-k8.iam.gserviceaccount.com
 ```
 
 The cert-manager Kubernetes service account is mapped to that Google service
 account with GKE Workload Identity:
 
 ```text
-cert-manager/cert-manager -> cert-manager-dns01-sa@project-03eb5b2f-b0b9-4171-b14.iam.gserviceaccount.com
+cert-manager/cert-manager -> cert-manager-dns01-sa@dark-diagram-496907-k8.iam.gserviceaccount.com
 ```
 
 No static Google credentials are stored in this repository. The issuer does not
