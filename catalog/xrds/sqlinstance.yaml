@@ -39,6 +39,13 @@ spec:
                       type: string
                       description: Cloud SQL machine type (cost driver).
                       default: db-f1-micro
+                    privateNetwork:
+                      type: string
+                      description: >-
+                        Self-link of the VPC the instance gets its private IP on.
+                        Must match the infra `vpc_self_link` output and have the
+                        Private Services Access connection established.
+                      default: projects/project-03eb5b2f-b0b9-4171-b14/global/networks/vpc-platform
                     databaseName:
                       type: string
                       description: Name of the application database to create.
