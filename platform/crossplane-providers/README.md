@@ -15,6 +15,14 @@ Only `provider-gcp-sql` is declared explicitly for GCP. Its package dependency
 resolution installs the matching `provider-family-gcp` dependency, so this repo
 does not define a second owner for that family provider.
 
+## Composition Function
+
+The Crossplane Function resource is named `function-patch-and-transform` and is
+pinned to
+`xpkg.crossplane.io/crossplane-contrib/function-patch-and-transform:v0.8.2`.
+Crossplane pipeline Compositions use this function for patch-and-transform
+rendering.
+
 ## ProviderConfigs
 
 Future Compositions must reference these ProviderConfig names:
@@ -60,7 +68,8 @@ they need.
 secrets, and network policies.
 
 `provider-helm` can manage only secrets, services, service accounts, deployments,
-horizontal pod autoscalers, and ingresses rendered by the tenant Helm charts.
+horizontal pod autoscalers, ingresses, Gateway API HTTPRoutes, and Prometheus
+Operator ServiceMonitors rendered by the tenant Helm charts.
 
 This supports soft multi-tenancy, but it is not a hard object-name boundary:
 Kubernetes RBAC can restrict resource types and namespaces, but it cannot restrict
@@ -68,8 +77,8 @@ cluster-scoped namespace object names to only `tenant-*`.
 
 ## Validation
 
-Cloud SQL smoke testing depends on infrastructure issue
-`Infrastructure-Engineering-PT-Group-F/infrastructure#45`.
+Cloud SQL smoke testing depends on the required platform infrastructure
+prerequisites being in place.
 
 Manual future live-cluster validation:
 
