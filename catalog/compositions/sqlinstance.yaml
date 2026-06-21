@@ -31,12 +31,6 @@ spec:
                   deletionProtection: false
                   settings:
                     tier: db-f1-micro
-                    # Private IP only: without this the instance gets a public
-                    # IP and ignores the VPC peering. Needs the infra Private
-                    # Services Access connection (which consumes the infra
-                    # `private_services_access_range_name` output) on this
-                    # network first. Keep `privateNetwork` in sync with the infra
-                    # `vpc_self_link` output so the two do not drift.
                     ipConfiguration:
                       ipv4Enabled: false
                       privateNetwork: projects/project-03eb5b2f-b0b9-4171-b14/global/networks/vpc-platform
