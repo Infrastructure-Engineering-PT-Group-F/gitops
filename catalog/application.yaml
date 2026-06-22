@@ -1,0 +1,30 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: catalog
+  namespace: argocd
+  annotations:
+    # Reconcile after platform add-ons install the CRDs used by catalog content.
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Infrastructure-Engineering-PT-Group-F/gitops.git
+    targetRevision: main
+    path: catalog
+    directory:
+      recurse: true
+      exclude: application.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

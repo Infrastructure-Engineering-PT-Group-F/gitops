@@ -8,7 +8,7 @@ cluster by ArgoCD, not by hand.
 
 | Path | Purpose |
 |------|---------|
-| `platform/` | Cluster platform add-ons as ArgoCD `Application`s (Helm): Envoy Gateway, Crossplane. |
+| `platform/` | Cluster platform add-ons as ArgoCD `Application`s (Helm). |
 | `catalog/` | Crossplane service catalog - XRDs + Compositions that define what a "tenant" is. |
 | `tenants/` | Per-tenant Composite Resources (XRs) |
 
@@ -21,8 +21,12 @@ automatically. See `tenants/README.md`.
 ## Root Application Ownership
 
 Terraform in `Infrastructure-Engineering-PT-Group-F/infrastructure` creates and
-owns the root App-of-Apps directly. This repository owns only the child
-Application manifests under `platform/`, `catalog/`, and `tenants/`.
+owns only the root App-of-Apps directly. That root Application scans this
+repository for child ArgoCD `Application` manifests.
+
+This repository owns the child Applications and the reconciled content under
+`platform/`, `catalog/`, and `tenants/`. Platform add-ons, catalog definitions,
+and tenant resources should be changed here and reconciled by ArgoCD.
 
 ## Contributing
 
