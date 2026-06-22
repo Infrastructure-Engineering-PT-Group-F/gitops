@@ -10,3 +10,6 @@ Add-ons (one subfolder each):
 |--------|---------|
 | `envoy-gateway` | Gateway API ingress (HTTP/HTTPS) for public endpoints |
 | `crossplane` | Control plane for the tenant service catalog |
+| `external-secrets` | Synchronizes Kubernetes Secrets from Google Secret Manager |
+| `cert-manager` | Issues TLS certificates through DNS-01 validation |
+| `external-dns` | Publishes Gateway and HTTPRoute DNS records to Cloud DNS |

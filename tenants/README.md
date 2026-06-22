@@ -12,6 +12,11 @@ applied directly by ArgoCD, so the staging tenant is reproducible either way.
   promoting to production tenants.
 - `<tenant>/`: one folder per production tenant.
 
+`application.yaml` is the ArgoCD child Application for this directory. The
+Terraform-owned root App-of-Apps discovers it, and this child Application
+reconciles tenant manifests from `tenants/` recursively, including the current
+`staging/namespace.yaml` baseline.
+
 ## Namespace baseline
 
 Every tenant gets exactly one namespace. It is the foundation for the tenant
@@ -52,8 +57,8 @@ In the target model Crossplane creates the namespace through the catalog
 Composition, so a single tenant resource provisions the namespace with this exact
 shape. `staging/namespace.yaml` is the canonical reference for that shape and
 doubles as the directly applied staging namespace until the Composition is in
-place. For ArgoCD to apply manifests under `tenants/`, the Terraform-owned root
-App-of-Apps must include this directory.
+place. ArgoCD applies manifests under `tenants/` through the `tenants` child
+Application in this directory.
 
 ## Add a tenant
 
