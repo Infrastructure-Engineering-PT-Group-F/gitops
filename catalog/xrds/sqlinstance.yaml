@@ -1,0 +1,54 @@
+---
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: sqlinstances.platform.fh-burgenland.at
+spec:
+  scope: Namespaced
+  group: platform.fh-burgenland.at
+  names:
+    kind: SQLInstance
+    plural: sqlinstances
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                parameters:
+                  type: object
+                  properties:
+                    region:
+                      type: string
+                      description: GCP region for the Cloud SQL instance.
+                      default: europe-west1
+                    databaseVersion:
+                      type: string
+                      description: Cloud SQL Postgres engine version.
+                      default: POSTGRES_18
+                      enum:
+                        - POSTGRES_16
+                        - POSTGRES_17
+                        - POSTGRES_18
+                    tier:
+                      type: string
+                      description: Cloud SQL machine type (cost driver).
+                      default: db-f1-micro
+                    databaseName:
+                      type: string
+                      description: Name of the application database to create.
+                  required:
+                    - databaseName
+              required:
+                - parameters
+            status:
+              type: object
+              properties:
+                instanceName:
+                  type: string
+                  description: External name of the provisioned Cloud SQL instance.

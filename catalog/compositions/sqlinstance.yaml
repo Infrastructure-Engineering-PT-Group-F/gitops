@@ -1,0 +1,81 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: sqlinstance-gcp-cloudsql
+  labels:
+    provider: gcp
+    database: postgresql
+spec:
+  compositeTypeRef:
+    apiVersion: platform.fh-burgenland.at/v1alpha1
+    kind: SQLInstance
+  mode: Pipeline
+  pipeline:
+    - step: patch-and-transform
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          # 1) The Cloud SQL instance itself
+          - name: instance
+            base:
+              apiVersion: sql.gcp.m.upbound.io/v1beta1
+              kind: DatabaseInstance
+              spec:
+                forProvider:
+                  region: europe-west1
+                  databaseVersion: POSTGRES_18
+                  deletionProtection: false
+                  settings:
+                    tier: db-f1-micro
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: default
+            patches:
+              - fromFieldPath: spec.parameters.region
+                toFieldPath: spec.forProvider.region
+              - fromFieldPath: spec.parameters.databaseVersion
+                toFieldPath: spec.forProvider.databaseVersion
+              - fromFieldPath: spec.parameters.tier
+                toFieldPath: spec.forProvider.settings.tier
+              - type: ToCompositeFieldPath
+                fromFieldPath: metadata.annotations[crossplane.io/external-name]
+                toFieldPath: status.instanceName
+          # 2) A database on that instance
+          - name: database
+            base:
+              apiVersion: sql.gcp.m.upbound.io/v1beta1
+              kind: Database
+              spec:
+                forProvider:
+                  instanceSelector:
+                    matchControllerRef: true
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: default
+            patches:
+              - fromFieldPath: spec.parameters.databaseName
+                toFieldPath: metadata.annotations[crossplane.io/external-name]
+          # 3) An application user on that instance
+          - name: user
+            base:
+              apiVersion: sql.gcp.m.upbound.io/v1beta1
+              kind: User
+              spec:
+                forProvider:
+                  instanceSelector:
+                    matchControllerRef: true
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: default
+            patches:
+              - fromFieldPath: spec.parameters.databaseName
+                toFieldPath: metadata.annotations[crossplane.io/external-name]
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "%s-user"
