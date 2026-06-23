@@ -25,13 +25,24 @@ rendering.
 
 ## ProviderConfigs
 
-Future Compositions must reference these ProviderConfig names:
+Future namespaced XTenant Compositions must reference only the v2 `.m`
+ProviderConfigs:
 
 | Config name | Kind / scope | API version | Authentication |
 |-------------|--------------|-------------|----------------|
-| `kubernetes-provider` | `ProviderConfig` | `kubernetes.crossplane.io/v1alpha1` | `InjectedIdentity` |
-| `helm-provider` | `ProviderConfig` | `helm.crossplane.io/v1beta1` | `InjectedIdentity` |
+| `kubernetes-provider` | namespaced `ProviderConfig` in `default` | `kubernetes.m.crossplane.io/v1alpha1` | `InjectedIdentity` |
+| `helm-provider` | namespaced `ProviderConfig` in `default` | `helm.m.crossplane.io/v1beta1` | `InjectedIdentity` |
 | `default` | `ClusterProviderConfig` | `gcp.m.upbound.io/v1beta1` | `InjectedIdentity` with `projectID: dark-diagram-496907-k8` |
+
+The legacy `kubernetes.crossplane.io/v1alpha1` and
+`helm.crossplane.io/v1beta1` ProviderConfigs remain managed temporarily for
+compatibility, but new Crossplane v2 tenant Compositions must not reference
+them.
+
+The GCP `ClusterProviderConfig/default` explicitly declares an empty
+`impersonateServiceAccount.name` to match the observed provider-defaulted live
+state and prevent perpetual ArgoCD OutOfSync drift while
+`credentials.source` remains `InjectedIdentity`.
 
 ## Identity
 
@@ -84,7 +95,8 @@ Manual future live-cluster validation:
 
 1. Confirm the `crossplane-providers` ArgoCD Application is synced.
 2. Confirm all provider packages report `Installed=True` and `Healthy=True`.
-3. Confirm the three ProviderConfigs exist.
+3. Confirm the legacy ProviderConfigs, the v2 namespaced ProviderConfigs, and
+   the GCP ClusterProviderConfig exist.
 4. Confirm `crossplane-system/provider-gcp` has the Workload Identity annotation.
 5. Run temporary smoke resources for provider-kubernetes, provider-helm, and
    provider-gcp-sql, then remove them.
