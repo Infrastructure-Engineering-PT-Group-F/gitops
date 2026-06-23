@@ -17,6 +17,12 @@ kubeconfig
 
 gcp-key.json
 service-account-key.json
+# Additional local Google Cloud credential material
+application_default_credentials.json
+*service-account*.json
+*service_account*.json
+*.credentials.json
+.config/gcloud/
 
 secrets.local.yaml
 secrets.local.yml
