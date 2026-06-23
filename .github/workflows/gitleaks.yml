@@ -1,0 +1,73 @@
+---
+# Repository-wide secret scanning for pull requests and pushes to main.
+name: gitleaks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out complete repository history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download and verify Gitleaks CLI
+        env:
+          GITLEAKS_VERSION: "8.30.1"
+          GITLEAKS_SHA256: "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+        run: |
+          set -euo pipefail
+
+          archive="${RUNNER_TEMP}/gitleaks.tar.gz"
+          install_dir="${RUNNER_TEMP}/gitleaks"
+
+          curl --fail --silent --show-error --location \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            --output "${archive}"
+
+          echo "${GITLEAKS_SHA256}  ${archive}" | sha256sum --check
+
+          mkdir -p "${install_dir}"
+          tar -xzf "${archive}" -C "${install_dir}"
+          chmod +x "${install_dir}/gitleaks"
+
+          "${install_dir}/gitleaks" version
+
+      - name: Reject scanner override files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for forbidden_file in \
+            ".gitleaksignore" \
+            ".gitleaks.toml" \
+            "gitleaks.toml"; do
+            if [ -e "${forbidden_file}" ]; then
+              echo "::error file=${forbidden_file}::Gitleaks override files are not permitted in this repository."
+              exit 1
+            fi
+          done
+
+      - name: Scan complete Git history
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          "${RUNNER_TEMP}/gitleaks/gitleaks" git \
+            --no-banner \
+            --no-color \
+            --redact=100 \
+            --ignore-gitleaks-allow \
+            --exit-code 1 \
+            --log-opts="--all"
