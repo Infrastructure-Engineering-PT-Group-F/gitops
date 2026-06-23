@@ -102,12 +102,31 @@ git ls-files
 Do not use commands that print Secret manifests, encoded Secret data, decoded
 Secret data, or Secret descriptions.
 
+## Continuous Secret Scanning
+
+GitHub Actions runs repository-wide Gitleaks scanning through
+`.github/workflows/gitleaks.yml` for every pull request and every push to
+`main`.
+
+The workflow:
+
+- Scans complete Git history.
+- Downloads a pinned Gitleaks CLI release and verifies its SHA-256 checksum.
+- Uses `--redact=100` so candidate secret values are not written to CI logs.
+- Fails with exit code `1` when a candidate secret is detected.
+- Rejects scanner override files (`.gitleaksignore`, `.gitleaks.toml`, and `gitleaks.toml`) before scanning.
+- Does not use a baseline or allowlist.
+
+For a local history scan, contributors may install Gitleaks `v8.30.1` and run:
+
+```shell
+gitleaks git --no-banner --no-color --redact=100 --ignore-gitleaks-allow --exit-code 1 --log-opts="--all"
+```
+
 ## Required Follow-up
 
 The following work is tracked as GitHub issues:
 
-- Add a GitOps CI secret-scanning control, such as Gitleaks. Tracked by
-  [gitops #50](https://github.com/Infrastructure-Engineering-PT-Group-F/gitops/issues/50).
 - Validate at least one tenant-scoped `ExternalSecret` after XTenant
   provisioning is implemented. Tracked by
   [gitops #39](https://github.com/Infrastructure-Engineering-PT-Group-F/gitops/issues/39).
