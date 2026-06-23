@@ -53,8 +53,16 @@ spec:
                       type: string
                       description: >-
                         Name of the ESO-managed Secret (in the SQLInstance
-                        namespace) holding the database username/password.
+                        namespace) holding the database url/username/password.
                       default: weather-app-backend-db
+                    connectionSecretName:
+                      type: string
+                      description: >-
+                        Name of the Crossplane-owned Secret (in the SQLInstance
+                        namespace) the composition writes with the non-secret
+                        connection info (`host`, `port`, `database`). ESO reads
+                        `host` from it to build the JDBC url.
+                      default: weather-app-backend-db-conn
                   required:
                     - databaseName
               required:
@@ -65,3 +73,6 @@ spec:
                 instanceName:
                   type: string
                   description: External name of the provisioned Cloud SQL instance.
+                host:
+                  type: string
+                  description: Private IP of the instance

@@ -31,7 +31,26 @@ spec:
   noUpper: false
   allowRepeat: true
 ---
-# Credentials (username + generated password). 
+# Reads the Crossplane-owned connection Secret for the host in this namespace.
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: in-cluster
+  namespace: tenant-a
+spec:
+  provider:
+    kubernetes:
+      remoteNamespace: tenant-a
+      server:
+        caProvider:
+          type: ConfigMap
+          name: kube-root-ca.crt
+          key: ca.crt
+      auth:
+        serviceAccount:
+          name: eso-store-reader
+---
+# Credentials Secret: url + username + generated password.
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -47,10 +66,17 @@ spec:
       data:
         username: "appdb-user"
         password: "{{ .password }}"
+        url: "jdbc:postgresql://{{ .host }}:5432/{{ .database }}"
   dataFrom:
     - sourceRef:
         generatorRef:
           apiVersion: generators.external-secrets.io/v1alpha1
           kind: Password
           name: db-password
+    - extract:
+        key: weather-app-backend-db-conn
+      sourceRef:
+        storeRef:
+          name: in-cluster
+          kind: SecretStore
 ```
