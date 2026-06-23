@@ -26,6 +26,7 @@ wiring is handled separately.
 | `databaseVersion` | no | `POSTGRES_18` | Cloud SQL Postgres engine version. Constrained to `POSTGRES_16` / `POSTGRES_17` / `POSTGRES_18` |
 | `tier` | no | `db-f1-micro` | Machine type (main cost driver) |
 | `privateNetwork` | no | platform VPC self-link | VPC the instance gets its private IP on; must match the infra `vpc_self_link` output |
+| `credentialsSecretName` | no | `weather-app-backend-db` | ESO-managed Secret holding the DB `username`/`password` |
 
 ```yaml
 apiVersion: platform.fh-burgenland.at/v1alpha1
@@ -46,3 +47,11 @@ on the infrastructure Private Services Access connection - the service-networkin
 connection that consumes the infra `private_services_access_range_name` output - already
 existing on that VPC. Keep `privateNetwork` in sync with the infra `vpc_self_link`
 output so the gitops composition and the IaC peering do not drift.
+
+### Credentials (ESO-owned Secret)
+
+An ESO `Password` generator + `ExternalSecret` produce `credentialsSecretName`
+(default `weather-app-backend-db`) with `username` and an auto-generated `password`.
+The Cloud SQL `User.passwordSecretRef` reads `password` from it, so the DB user and
+the app share one generated password.
+

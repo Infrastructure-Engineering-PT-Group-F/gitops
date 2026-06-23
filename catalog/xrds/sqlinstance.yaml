@@ -49,6 +49,12 @@ spec:
                     databaseName:
                       type: string
                       description: Name of the application database to create.
+                    credentialsSecretName:
+                      type: string
+                      description: >-
+                        Name of the ESO-managed Secret (in the SQLInstance
+                        namespace) holding the database username/password.
+                      default: weather-app-backend-db
                   required:
                     - databaseName
               required:
