@@ -31,7 +31,7 @@ Future Compositions must reference these ProviderConfig names:
 |-------------|--------------|-------------|----------------|
 | `kubernetes-provider` | `ProviderConfig` | `kubernetes.crossplane.io/v1alpha1` | `InjectedIdentity` |
 | `helm-provider` | `ProviderConfig` | `helm.crossplane.io/v1beta1` | `InjectedIdentity` |
-| `default` | `ClusterProviderConfig` | `gcp.upbound.io/v1beta1` | `InjectedIdentity` with `projectID: dark-diagram-496907-k8` |
+| `default` | `ClusterProviderConfig` | `gcp.m.upbound.io/v1beta1` | `InjectedIdentity` with `projectID: dark-diagram-496907-k8` |
 
 ## Identity
 
