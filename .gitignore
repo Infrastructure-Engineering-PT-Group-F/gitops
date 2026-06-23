@@ -1,0 +1,22 @@
+# Local secret and credential material - never commit
+.env
+.env.*
+!.env.example
+.envrc
+
+values.local.yaml
+values.local.yml
+
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.kubeconfig
+kubeconfig
+
+gcp-key.json
+service-account-key.json
+
+secrets.local.yaml
+secrets.local.yml
