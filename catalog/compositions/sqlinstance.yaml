@@ -73,6 +73,8 @@ spec:
                 forProvider:
                   instanceSelector:
                     matchControllerRef: true
+                  passwordSecretRef:
+                    key: password
                 providerConfigRef:
                   kind: ClusterProviderConfig
                   name: default
@@ -84,3 +86,7 @@ spec:
                     string:
                       type: Format
                       fmt: "%s-user"
+              - fromFieldPath: spec.parameters.credentialsSecretName
+                toFieldPath: spec.forProvider.passwordSecretRef.name
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.passwordSecretRef.namespace
