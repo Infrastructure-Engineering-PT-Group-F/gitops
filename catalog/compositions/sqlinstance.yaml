@@ -49,6 +49,9 @@ spec:
               - type: ToCompositeFieldPath
                 fromFieldPath: metadata.annotations[crossplane.io/external-name]
                 toFieldPath: status.instanceName
+              - type: ToCompositeFieldPath
+                fromFieldPath: status.atProvider.privateIpAddress
+                toFieldPath: status.host
           # 2) A database on that instance
           - name: database
             base:
@@ -90,3 +93,27 @@ spec:
                 toFieldPath: spec.forProvider.passwordSecretRef.name
               - fromFieldPath: metadata.namespace
                 toFieldPath: spec.forProvider.passwordSecretRef.namespace
+          # 4) Publish the DB host (private IP) as a connection Secret that ESO
+          #    reads to build the JDBC url.
+          - name: connection
+            base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: v1
+                    kind: Secret
+                    stringData:
+                      port: "5432"
+                providerConfigRef:
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: spec.parameters.connectionSecretName
+                toFieldPath: spec.forProvider.manifest.metadata.name
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+              - fromFieldPath: spec.parameters.databaseName
+                toFieldPath: spec.forProvider.manifest.stringData.database
+              - fromFieldPath: status.host
+                toFieldPath: spec.forProvider.manifest.stringData.host

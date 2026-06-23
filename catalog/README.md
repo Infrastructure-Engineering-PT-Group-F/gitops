@@ -15,9 +15,10 @@ cluster required to author these.
 
 `SQLInstance` (`platform.fh-burgenland.at/v1alpha1`, namespaced) is the self-service
 database API. A tenant creates one `SQLInstance` in its namespace and the
-`sqlinstance-gcp-cloudsql` Composition provisions a Cloud SQL `DatabaseInstance`
-and `Database`. The `User` resource exists in the composition, but credential
-wiring is handled separately.
+`sqlinstance-gcp-cloudsql` Composition provisions a Cloud SQL `DatabaseInstance`,
+a `Database`, and a `User`. The `User` password is supplied by an ESO-generated
+Secret (see Credentials below). The composition also publishes the instance host
+as a connection Secret for ESO to build the JDBC url.
 
 | Parameter | Required | Default | Purpose |
 |-----------|----------|---------|---------|
@@ -26,7 +27,8 @@ wiring is handled separately.
 | `databaseVersion` | no | `POSTGRES_18` | Cloud SQL Postgres engine version. Constrained to `POSTGRES_16` / `POSTGRES_17` / `POSTGRES_18` |
 | `tier` | no | `db-f1-micro` | Machine type (main cost driver) |
 | `privateNetwork` | no | platform VPC self-link | VPC the instance gets its private IP on; must match the infra `vpc_self_link` output |
-| `credentialsSecretName` | no | `weather-app-backend-db` | ESO-managed Secret holding the DB `username`/`password` |
+| `credentialsSecretName` | no | `weather-app-backend-db` | ESO-owned Secret holding the DB `url`/`username`/`password` |
+| `connectionSecretName` | no | `weather-app-backend-db-conn` | Crossplane-owned Secret with `host`/`port`/`database` |
 
 ```yaml
 apiVersion: platform.fh-burgenland.at/v1alpha1
@@ -48,10 +50,17 @@ connection that consumes the infra `private_services_access_range_name` output -
 existing on that VPC. Keep `privateNetwork` in sync with the infra `vpc_self_link`
 output so the gitops composition and the IaC peering do not drift.
 
-### Credentials (ESO-owned Secret)
+### Credentials and connection
 
-An ESO `Password` generator + `ExternalSecret` produce `credentialsSecretName`
-(default `weather-app-backend-db`) with `username` and an auto-generated `password`.
-The Cloud SQL `User.passwordSecretRef` reads `password` from it, so the DB user and
-the app share one generated password.
+The backend Secret `credentialsSecretName` (default `weather-app-backend-db`) needs
+`url`, `username`, and `password`. 
+
+- **Connection Secret (Crossplane-owned).** The composition publishes the instance
+  private IP (`status.atProvider.privateIpAddress`) plus `port`/`database` to
+  `connectionSecretName` (default `weather-app-backend-db-conn`). Crossplane is the
+  sole writer. Populated on the reconcile after the instance gets its IP.
+- **Credentials Secret (ESO-owned).** An ESO `Password` generator + `ExternalSecret`
+  own `credentialsSecretName`: ESO generates the `password`, reads `host` from the
+  connection Secret via a Kubernetes `SecretStore`, and templates
+  `url: jdbc:postgresql://<host>:5432/<database>`. 
 
