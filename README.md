@@ -28,6 +28,12 @@ This repository owns the child Applications and the reconciled content under
 `platform/`, `catalog/`, and `tenants/`. Platform add-ons, catalog definitions,
 and tenant resources should be changed here and reconciled by ArgoCD.
 
+## Security and Secrets
+
+See [Secret Handling](docs/security/secret-handling.md) for the secret
+management architecture, repository rules, local-development exception and
+audit procedure.
+
 ## Contributing
 
 Conventional Commits, issue reference required, rebase-only (no merge commits).
