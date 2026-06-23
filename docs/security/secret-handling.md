@@ -104,14 +104,23 @@ Secret data, or Secret descriptions.
 
 ## Required Follow-up
 
-- Add a GitOps CI secret-scanning control, such as Gitleaks.
-- Validate at least one tenant-scoped ExternalSecret after XTenant provisioning
-  is implemented.
-- Validate tenant image-pull secret delivery for the private frontend image.
-- Reassess this document after the pending tenant database credential workflow
-  is implemented.
-- Do not treat database Secret automation as live until it is actually merged
-  and validated.
+The following work is tracked as GitHub issues:
+
+- Add a GitOps CI secret-scanning control, such as Gitleaks. Tracked by
+  [gitops #50](https://github.com/Infrastructure-Engineering-PT-Group-F/gitops/issues/50).
+- Validate at least one tenant-scoped `ExternalSecret` after XTenant
+  provisioning is implemented. Tracked by
+  [gitops #39](https://github.com/Infrastructure-Engineering-PT-Group-F/gitops/issues/39).
+- Deliver tenant database credentials through ESO. Tracked by
+  [gitops #42](https://github.com/Infrastructure-Engineering-PT-Group-F/gitops/issues/42).
+- Validate tenant image-pull Secret delivery for the private frontend image.
+  Tracked by
+  [frontend #34](https://github.com/Infrastructure-Engineering-PT-Group-F/frontend/issues/34).
+- Validate backend consumption of the tenant-scoped external PostgreSQL Secret.
+  Tracked by
+  [backend #28](https://github.com/Infrastructure-Engineering-PT-Group-F/backend/issues/28).
+- Do not treat database Secret automation as live until the related GitOps and
+  backend validation work is merged and verified.
 
 ## Ownership and Escalation
 
