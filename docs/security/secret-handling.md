@@ -48,13 +48,45 @@ service-account keys or store credential files in Git.
 
 The current intended workload consumption patterns are:
 
-- Backend API key: existing Secret `api-keys`, key `avwx-api-key`.
+- Backend API key: existing Secret `api-keys`, key `avwx-api-key`,
+  delivered from Google Secret Manager source `avwx-api-key`.
 - Backend external PostgreSQL mode: existing Secret `weather-app-backend-db`
   with `url`, `username`, and `password` keys.
-- Frontend private GHCR image: `imagePullSecrets` must be supplied per tenant,
-  preferably through the approved external-secret process.
-- A tenant Secret must be namespace-scoped.
-- Do not create or share a global tenant application Secret across namespaces.
+- Workload image pulls for private GHCR images: existing Secret `ghcr-pull`,
+  type `kubernetes.io/dockerconfigjson`, key `.dockerconfigjson`, consumed
+  through `imagePullSecrets`.
+- Crossplane Helm provider OCI chart pulls: existing Secret `ghcr-chart-pull`,
+  type `Opaque`, keys `username` and `password`.
+- All tenant runtime Secrets remain namespace-scoped.
+
+## Tenant Runtime-Secret Delivery
+
+The reference implementation is `tenants/validation/runtime-secrets.yaml`.
+Delivery follows this pattern:
+
+```text
+Google Secret Manager
+-> ClusterSecretStore/gcp-secret-manager
+-> explicit per-tenant ExternalSecret
+-> tenant-scoped Kubernetes Secret
+```
+
+`ClusterExternalSecret` is intentionally not used for this initial model.
+
+| GSM source secret | Kubernetes Secret | Type | Keys |
+| --- | --- | --- | --- |
+| `avwx-api-key` | `api-keys` | `Opaque` | `avwx-api-key` |
+| `ghcr-pull` | `ghcr-pull` | `kubernetes.io/dockerconfigjson` | `.dockerconfigjson` |
+| `ghcr-pull` | `ghcr-chart-pull` | `Opaque` | `username`, `password` |
+
+`ghcr-pull` is for workload image pulls. `ghcr-chart-pull` is only for the
+Crossplane Helm provider pulling private OCI Helm charts. `hochschule-jz` is
+non-secret registry metadata.
+
+Source payloads are seeded outside Git and must never be placed in Git,
+Terraform state, logs, PR descriptions, screenshots, or documentation. The AVWX
+source payload must be the complete Authorization-header value consumed by the
+backend; its actual value must never be inspected or documented.
 
 ## Local Development Exception
 
