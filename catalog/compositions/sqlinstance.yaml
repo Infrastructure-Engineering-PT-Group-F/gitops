@@ -92,8 +92,6 @@ spec:
                       fmt: "%s-user"
               - fromFieldPath: spec.parameters.credentialsSecretName
                 toFieldPath: spec.forProvider.passwordSecretRef.name
-              - fromFieldPath: metadata.namespace
-                toFieldPath: spec.forProvider.passwordSecretRef.namespace
           # 4) Publish the DB host (private IP) as a connection Secret that ESO
           #    reads to build the JDBC url.
           - name: connection
