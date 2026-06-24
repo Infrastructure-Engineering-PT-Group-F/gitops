@@ -5,6 +5,10 @@ metadata:
   name: tenant-validation
   annotations:
     argocd.argoproj.io/sync-wave: "0"
+    platform.fh-burgenland.at/owner: "Infrastructure Engineering PT, Group F"
+    platform.fh-burgenland.at/description: >-
+      Validation tenant for runtime-secret delivery and tenant integration
+      checks before wider rollout.
   labels:
     app.kubernetes.io/part-of: weather-app
     platform.fh-burgenland.at/environment: validation

@@ -10,6 +10,8 @@ applied directly by ArgoCD, so the staging tenant is reproducible either way.
 
 - `staging/`: permanent staging tenant. Validate new app versions here before
   promoting to production tenants.
+- `validation/`: non-production validation tenant for runtime-secret delivery
+  and tenant integration checks.
 - `<tenant>/`: one folder per production tenant.
 
 `application.yaml` is the ArgoCD child Application for this directory. The
@@ -34,7 +36,7 @@ platform namespaces such as `crossplane-system` or `external-secrets`. Examples:
 | Label | Example | Purpose |
 |-------|---------|---------|
 | `platform.fh-burgenland.at/tenant` | `staging` | Tenant identifier, used by network policies and selectors |
-| `platform.fh-burgenland.at/environment` | `staging` | `staging` or `production` |
+| `platform.fh-burgenland.at/environment` | `staging` | `staging`, `validation`, or `production` |
 | `app.kubernetes.io/part-of` | `weather-app` | Groups the tenant workloads under the application |
 | `pod-security.kubernetes.io/enforce` | `baseline` | Pod Security Admission level enforced in the namespace |
 | `pod-security.kubernetes.io/warn` | `restricted` | Warns on workloads that are not yet restricted |
@@ -43,6 +45,10 @@ platform namespaces such as `crossplane-system` or `external-secrets`. Examples:
 `enforce` is `baseline` for now because the app workloads do not yet set a full
 restricted security context. It can be raised to `restricted` once the backend and
 frontend pods set a restricted-compatible security context.
+
+`validation` is a deliberate non-production environment for tenant integration
+and runtime-secret delivery checks. Tenant runtime-secret delivery selectors
+must include it when validation namespaces participate in that flow.
 
 ### Annotations
 
@@ -64,6 +70,6 @@ Application in this directory.
 
 1. Copy `staging/` to `tenants/<name>/`, rename the namespace to `tenant-<name>`,
    and set the `tenant` and `environment` labels.
-2. Open a PR (Conventional Commit, reference the issue).
+2. Open a PR following the repository contribution rules.
 3. On merge, ArgoCD applies the resources and, once the catalog Composition is in
    place, Crossplane provisions the namespace, database, and app instance.
