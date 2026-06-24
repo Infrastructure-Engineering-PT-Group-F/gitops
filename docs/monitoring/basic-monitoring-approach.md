@@ -199,17 +199,30 @@ GitOps issue #13 is the implementation follow-up for this decision.
 
 The implementation scope should be:
 
-1. Add one GMP-native PodMonitoring resource for the backend in
-   `tenant-staging`.
-2. Select the backend Pod labels and named `http` port.
-3. Scrape `/actuator/prometheus` only after the backend management endpoint is
-   confirmed internal-only.
-4. Confirm target availability through the PromQL query `up`.
-5. Create two Cloud Monitoring dashboard views:
+1. Create exactly one standalone, namespace-scoped
+   `monitoring.googleapis.com/v1` `PodMonitoring` manifest under
+   `tenants/staging/`.
+2. Reconcile that manifest through the existing tenant Argo CD Application.
+3. Do not render the initial GMP PodMonitoring from the backend Helm chart.
+4. Before synchronizing the manifest, update the relevant GitOps and Argo CD
+   authorization policy so the namespaced `PodMonitoring` kind in API group
+   `monitoring.googleapis.com` can be reconciled.
+5. Do not grant the backend workload permissions to create or manage
+   PodMonitoring resources.
+6. Keep the backend chart's optional Prometheus Operator ServiceMonitor
+   disabled. Do not enable `monitoring.coreos.com/v1` ServiceMonitor and GMP
+   PodMonitoring for the same backend target.
+7. Select only staging backend Pods using the existing backend chart selector
+   labels, including the staging Helm-release instance label, and use the named
+   `http` container port.
+8. Scrape `/actuator/prometheus` only after the backend management endpoint is
+   confirmed internal-only and not reachable through a public HTTPRoute.
+9. Confirm target availability through the PromQL query `up`.
+10. Create two Cloud Monitoring dashboard views:
    - Internal application-owner view filtered to `tenant-staging`.
    - Platform-administrator view across platform namespaces.
-6. Record dashboard configuration, screenshots, and safe validation evidence.
-7. Keep alert policies optional until the tenant baseline is stable.
+11. Record dashboard configuration, screenshots, and safe validation evidence.
+12. Keep alert policies optional until the tenant baseline is stable.
 
 ### GitOps Issue #39 - Tenant Composition
 
@@ -219,6 +232,10 @@ lifecycle concern:
 - Each tenant namespace receives its own PodMonitoring resource.
 - Tenant name and namespace remain stable aggregation dimensions.
 - The Composition must not expose management endpoints publicly.
+- The final tenant lifecycle design must define one authoritative owner for
+  each PodMonitoring resource. Ownership can move to Crossplane Composition or
+  stay with GitOps tenant manifests, but Argo CD and Crossplane must never
+  manage the same PodMonitoring resource concurrently.
 - Tenant dashboard configuration remains internal unless a dedicated
   authorization model is designed.
 
@@ -245,7 +262,7 @@ that verifies all of the following:
 | Area | Owner |
 |---|---|
 | GKE metric packages and GMP enablement | Infrastructure and cloud operator |
-| GMP-native PodMonitoring resources | GitOps and tenant composition |
+| GMP-native PodMonitoring resources | GitOps initially; tenant composition after an explicit ownership transition |
 | Backend Actuator and Prometheus endpoint contract | Backend team |
 | Cloud Monitoring dashboards and operational views | Platform team |
 | Tenant operational review | Internal application owner |
