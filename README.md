@@ -34,6 +34,13 @@ See [Secret Handling](docs/security/secret-handling.md) for the secret
 management architecture, repository rules, local-development exception and
 audit procedure.
 
+## Monitoring (Bonus)
+
+See [Basic Monitoring Approach](docs/monitoring/basic-monitoring-approach.md)
+for the documented Google Cloud Monitoring and Google Managed Service for
+Prometheus decision, monitoring baseline, ownership model, security rules, and
+implementation boundaries.
+
 ## Contributing
 
 Conventional Commits, issue reference required, rebase-only (no merge commits).
