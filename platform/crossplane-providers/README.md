@@ -26,18 +26,31 @@ rendering.
 ## ProviderConfigs
 
 Future namespaced XTenant Compositions must reference only the v2 `.m`
-ProviderConfigs:
+ProviderConfigs and ClusterProviderConfigs:
 
 | Config name | Kind / scope | API version | Authentication |
 |-------------|--------------|-------------|----------------|
 | `kubernetes-provider` | namespaced `ProviderConfig` in `default` | `kubernetes.m.crossplane.io/v1alpha1` | `InjectedIdentity` |
 | `helm-provider` | namespaced `ProviderConfig` in `default` | `helm.m.crossplane.io/v1beta1` | `InjectedIdentity` |
+| `helm-provider` | `ClusterProviderConfig` | `helm.m.crossplane.io/v1beta1` | `InjectedIdentity` |
 | `default` | `ClusterProviderConfig` | `gcp.m.upbound.io/v1beta1` | `InjectedIdentity` with `projectID: dark-diagram-496907-k8` |
+
+Future namespaced tenant Helm `Release` resources must use this
+`providerConfigRef` contract:
+
+```yaml
+providerConfigRef:
+  kind: ClusterProviderConfig
+  name: helm-provider
+```
 
 The legacy `kubernetes.crossplane.io/v1alpha1` and
 `helm.crossplane.io/v1beta1` ProviderConfigs remain managed temporarily for
 compatibility, but new Crossplane v2 tenant Compositions must not reference
 them.
+
+The existing `default/helm-provider` namespaced ProviderConfig remains unchanged
+for compatibility and must not be referenced by tenant Releases.
 
 The GCP `ClusterProviderConfig/default` explicitly declares an empty
 `impersonateServiceAccount.name` to match the observed provider-defaulted live

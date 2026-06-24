@@ -41,6 +41,16 @@ spec:
   credentials:
     source: InjectedIdentity
 ---
+apiVersion: helm.m.crossplane.io/v1beta1
+kind: ClusterProviderConfig
+metadata:
+  name: helm-provider
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  credentials:
+    source: InjectedIdentity
+---
 apiVersion: gcp.m.upbound.io/v1beta1
 kind: ClusterProviderConfig
 metadata:
