@@ -1,0 +1,17 @@
+---
+# Staging tenant database.
+#
+# BILLABLE: on merge, ArgoCD (automated sync) provisions a real Cloud SQL
+# `db-f1-micro` instance via the catalog `SQLInstance` Composition. The
+# Composition also creates the per-tenant `weather-app-backend-db-conn` Secret
+# (host/port/database) consumed by the ESO ExternalSecret in credentials.yaml.
+apiVersion: platform.fh-burgenland.at/v1alpha1
+kind: SQLInstance
+metadata:
+  name: weather-app-db
+  namespace: tenant-staging
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  parameters:
+    databaseName: appdb
