@@ -53,3 +53,13 @@ spec:
     source: InjectedIdentity
     impersonateServiceAccount:
       name: ""
+---
+apiVersion: kubernetes.m.crossplane.io/v1alpha1
+kind: ClusterProviderConfig
+metadata:
+  name: kubernetes-provider
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  credentials:
+    source: InjectedIdentity
