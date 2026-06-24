@@ -93,7 +93,11 @@ spec:
               - fromFieldPath: spec.parameters.credentialsSecretName
                 toFieldPath: spec.forProvider.passwordSecretRef.name
           # 4) Publish the DB host (private IP) as a connection Secret that ESO
-          #    reads to build the JDBC url.
+          #    reads to build the JDBC url. Values are written to data (base64)
+          #    rather than stringData: provider-kubernetes cannot observe a
+          #    Secret it applied with stringData, because the apiserver rewrites
+          #    stringData into data and that breaks server-side-apply field
+          #    tracking, leaving the Object stuck and the host never written.
           - name: connection
             base:
               apiVersion: kubernetes.m.crossplane.io/v1alpha1
@@ -103,8 +107,8 @@ spec:
                   manifest:
                     apiVersion: v1
                     kind: Secret
-                    stringData:
-                      port: "5432"
+                    data:
+                      port: NTQzMg==  # base64 "5432"
                 providerConfigRef:
                   kind: ClusterProviderConfig
                   name: kubernetes-provider
@@ -114,6 +118,16 @@ spec:
               - fromFieldPath: metadata.namespace
                 toFieldPath: spec.forProvider.manifest.metadata.namespace
               - fromFieldPath: spec.parameters.databaseName
-                toFieldPath: spec.forProvider.manifest.stringData.database
+                toFieldPath: spec.forProvider.manifest.data.database
+                transforms:
+                  - type: string
+                    string:
+                      type: Convert
+                      convert: ToBase64
               - fromFieldPath: status.host
-                toFieldPath: spec.forProvider.manifest.stringData.host
+                toFieldPath: spec.forProvider.manifest.data.host
+                transforms:
+                  - type: string
+                    string:
+                      type: Convert
+                      convert: ToBase64
