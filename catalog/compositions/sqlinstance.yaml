@@ -31,6 +31,7 @@ spec:
                   deletionProtection: false
                   settings:
                     tier: db-f1-micro
+                    edition: ENTERPRISE
                     ipConfiguration:
                       ipv4Enabled: false
                       privateNetwork: projects/dark-diagram-496907-k8/global/networks/vpc-platform
