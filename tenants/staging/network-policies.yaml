@@ -3,9 +3,9 @@
 #
 # The default-deny policy makes all tenant Pods isolated for ingress and egress.
 # The following allow policies open only the traffic the weather-app tenant needs:
-# DNS, Gateway ingress to app Pods, frontend-to-backend HTTP, backend-to-Cloud SQL
-# on the Private Services Access range, and backend public HTTPS for the external
-# weather API integration.
+# DNS, Gateway ingress to app Pods, backend-to-Cloud SQL on the Private Services
+# Access range, and backend public HTTPS for the external weather API
+# integration.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -66,50 +66,6 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: envoy-gateway-system
-      ports:
-        - protocol: TCP
-          port: 8080
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-backend-ingress-from-frontend
-  namespace: tenant-staging
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: weather-app-backend
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: weather-app-frontend
-      ports:
-        - protocol: TCP
-          port: 8080
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-frontend-egress-to-backend
-  namespace: tenant-staging
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/name: weather-app-frontend
-  policyTypes:
-    - Egress
-  egress:
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: weather-app-backend
       ports:
         - protocol: TCP
           port: 8080

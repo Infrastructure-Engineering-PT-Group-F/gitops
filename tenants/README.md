@@ -120,8 +120,6 @@ The staging policy model is:
 | `default-deny` | All tenant Pods | No ingress or egress unless another policy allows it |
 | `allow-dns-egress` | All tenant Pods | DNS to kube-system and the GKE Service CIDR on TCP/UDP 53 |
 | `allow-gateway-ingress-to-apps` | Backend and frontend Pods | Envoy Gateway data-plane ingress on TCP 8080 |
-| `allow-backend-ingress-from-frontend` | Backend Pods | Frontend Pods in the same namespace on TCP 8080 |
-| `allow-frontend-egress-to-backend` | Frontend Pods | Backend Pods in the same namespace on TCP 8080 |
 | `allow-backend-required-egress` | Backend Pods | Cloud SQL on TCP 5432 and public HTTPS on TCP 443 |
 
 Selectors intentionally use stable Helm chart labels inside the tenant
@@ -129,6 +127,10 @@ namespace: `app.kubernetes.io/name=weather-app-backend` and
 `app.kubernetes.io/name=weather-app-frontend`. They do not depend on the
 frontend chart carrying a tenant label, because the current frontend chart does
 not add one to Pods.
+
+The frontend serves static assets. Browser clients call the backend through the
+public Gateway route, so there is no frontend-Pod-to-backend-Pod allow rule.
+Backend ingress is allowed from the Envoy Gateway data plane only.
 
 Cloud SQL uses private IP only. Infrastructure reserves `10.30.0.0/16` for
 Google Private Services Access, and the backend egress policy limits PostgreSQL
@@ -164,11 +166,11 @@ Pods:
 kubectl -n tenant-staging run np-dns-test --rm -it --restart=Never `
   --image=busybox:1.36 -- nslookup kubernetes.default.svc.cluster.local
 
-# Allowed: frontend selector to backend Service on TCP 8080.
+# Denied: frontend Pods should not call the backend Service directly.
 kubectl -n tenant-staging run np-frontend-test --rm -it --restart=Never `
   --image=curlimages/curl:8.8.0 `
   --labels=app.kubernetes.io/name=weather-app-frontend `
-  -- curl -fsS http://weather-app-backend:8080/actuator/health/readiness
+  -- curl -m 5 -fsS http://weather-app-backend:8080/actuator/health/readiness
 
 # Denied: an unlabeled tenant Pod should not reach the backend.
 kubectl -n tenant-staging run np-deny-test --rm -it --restart=Never `
