@@ -105,6 +105,81 @@ the target model the catalog Composition renders these per tenant, selected by
 the XTenant `size` field, so this default tier becomes the `small` class and
 larger classes scale the same fields up.
 
+## Network policies
+
+Every tenant namespace should carry a deny-by-default `NetworkPolicy` baseline
+plus explicit allow policies for the tenant traffic model. The current staging
+reference is `staging/network-policies.yaml`; future production tenants and the
+Crossplane tenant Composition should render the same model with tenant-specific
+namespaces and selectors.
+
+The staging policy model is:
+
+| Policy | Selected Pods | Allowed traffic |
+| ------ | ------------- | --------------- |
+| `default-deny` | All tenant Pods | No ingress or egress unless another policy allows it |
+| `allow-dns-egress` | All tenant Pods | DNS to kube-system and the GKE Service CIDR on TCP/UDP 53 |
+| `allow-gateway-ingress-to-apps` | Backend and frontend Pods | Envoy Gateway data-plane ingress on TCP 8080 |
+| `allow-backend-ingress-from-frontend` | Backend Pods | Frontend Pods in the same namespace on TCP 8080 |
+| `allow-frontend-egress-to-backend` | Frontend Pods | Backend Pods in the same namespace on TCP 8080 |
+| `allow-backend-required-egress` | Backend Pods | Cloud SQL on TCP 5432 and public HTTPS on TCP 443 |
+
+Selectors intentionally use stable Helm chart labels inside the tenant
+namespace: `app.kubernetes.io/name=weather-app-backend` and
+`app.kubernetes.io/name=weather-app-frontend`. They do not depend on the
+frontend chart carrying a tenant label, because the current frontend chart does
+not add one to Pods.
+
+Cloud SQL uses private IP only. Infrastructure reserves `10.30.0.0/16` for
+Google Private Services Access, and the backend egress policy limits PostgreSQL
+traffic to that range on TCP 5432. The backend also needs public HTTPS egress for
+the external weather/METAR API integration. That rule excludes RFC1918 ranges so
+it does not reopen private VPC, Pod, Service, or cross-tenant access.
+
+The policies express the desired GitOps model, but Kubernetes only enforces
+`NetworkPolicy` when the cluster dataplane supports it. The current
+infrastructure code does not explicitly enable the GKE Network Policy add-on or
+Dataplane V2, so cross-tenant blocking must be treated as unproven until the
+negative validation test below succeeds on the live cluster. If enforcement is
+not active, close the gap in the infrastructure repository before relying on
+these policies as a security boundary.
+
+### Validation
+
+Run these checks after ArgoCD reconciles `tenants/staging/network-policies.yaml`:
+
+```powershell
+kubectl get networkpolicy -n tenant-staging
+kubectl describe networkpolicy -n tenant-staging
+kubectl get pods -n tenant-staging --show-labels
+kubectl get pods -n envoy-gateway-system --show-labels
+kubectl get svc -n kube-system
+```
+
+Then validate allowed and denied flows with temporary test Pods or existing app
+Pods:
+
+```powershell
+# Allowed: tenant DNS.
+kubectl -n tenant-staging run np-dns-test --rm -it --restart=Never `
+  --image=busybox:1.36 -- nslookup kubernetes.default.svc.cluster.local
+
+# Allowed: frontend selector to backend Service on TCP 8080.
+kubectl -n tenant-staging run np-frontend-test --rm -it --restart=Never `
+  --image=curlimages/curl:8.8.0 `
+  --labels=app.kubernetes.io/name=weather-app-frontend `
+  -- curl -fsS http://weather-app-backend:8080/actuator/health/readiness
+
+# Denied: an unlabeled tenant Pod should not reach the backend.
+kubectl -n tenant-staging run np-deny-test --rm -it --restart=Never `
+  --image=curlimages/curl:8.8.0 `
+  -- curl -m 5 -fsS http://weather-app-backend:8080/actuator/health/readiness
+```
+
+For database validation, verify that the backend remains healthy after
+`weather-app-backend-db` is populated and the SQLInstance has a private host.
+Do not print Secret data during validation.
+
 ## Add a tenant
 
 1. Copy `staging/` to `tenants/<name>/`, rename the namespace to
