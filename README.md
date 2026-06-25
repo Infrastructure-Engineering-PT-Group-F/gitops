@@ -28,6 +28,14 @@ This repository owns the child Applications and the reconciled content under
 `platform/`, `catalog/`, and `tenants/`. Platform add-ons, catalog definitions,
 and tenant resources should be changed here and reconciled by ArgoCD.
 
+Child Applications run under the restricted `platform` ArgoCD `AppProject`
+(created by Terraform alongside the root App), not the built-in `default`
+project, so every `application.yaml` sets `spec.project: platform`. The project
+allowlists the permitted source repos, so **adding a platform add-on that pulls
+from a new chart repo also requires adding that repo to the project's
+`sourceRepos` in `infrastructure/platform/argocd.tf`** — otherwise ArgoCD rejects
+the Application.
+
 ## Security and Secrets
 
 See [Secret Handling](docs/security/secret-handling.md) for the secret
