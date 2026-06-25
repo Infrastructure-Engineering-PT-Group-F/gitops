@@ -1,0 +1,35 @@
+---
+# Shared platform Gateway: the single public entrypoint for all tenants.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: shared-gateway
+  namespace: platform-gateway
+spec:
+  gatewayClassName: envoy-gateway
+  listeners:
+    # Plain HTTP exists only to redirect to HTTPS (see 20-http-to-https-redirect).
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: "*.gcp.ajdininfrastructure.lol"
+      allowedRoutes:
+        namespaces:
+          from: Same
+    # TLS terminates here using the wildcard certificate issued by cert-manager
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: "*.gcp.ajdininfrastructure.lol"
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: wildcard-gcp-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchExpressions:
+              - key: platform.fh-burgenland.at/tenant
+                operator: Exists
