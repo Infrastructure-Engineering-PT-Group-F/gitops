@@ -7,7 +7,7 @@ service catalog uses to render tenant resources.
 
 | Provider | Package | Purpose |
 |----------|---------|---------|
-| `provider-kubernetes` | `xpkg.crossplane.io/crossplane-contrib/provider-kubernetes:v1.2.1` | Renders Kubernetes objects such as tenant namespaces, network policies, resource quotas, limit ranges, and selected secrets. |
+| `provider-kubernetes` | `xpkg.crossplane.io/crossplane-contrib/provider-kubernetes:v1.2.1` | Renders Kubernetes objects such as tenant namespaces, network policies, resource quotas, limit ranges, selected secrets, and future tenant DB credential helper resources. |
 | `provider-helm` | `xpkg.crossplane.io/crossplane-contrib/provider-helm:v1.2.0` | Renders tenant backend and frontend Helm releases. |
 | `provider-gcp-sql` | `xpkg.upbound.io/upbound/provider-gcp-sql:v2.6.0` | Renders per-tenant Google Cloud SQL resources. |
 
@@ -89,7 +89,10 @@ The Kubernetes providers are intentionally scoped to the tenant resource types
 they need.
 
 `provider-kubernetes` can manage only namespaces, resource quotas, limit ranges,
-secrets, and network policies.
+secrets, service accounts, namespace-local RBAC, ESO SecretStores,
+ExternalSecrets, password generators, and network policies. The ESO and RBAC
+permissions exist solely for future namespaced tenant DB credential helper
+resources; this prerequisite change does not provision tenant workloads.
 
 `provider-helm` can manage only secrets, services, service accounts, deployments,
 horizontal pod autoscalers, ingresses, Gateway API HTTPRoutes, and Prometheus

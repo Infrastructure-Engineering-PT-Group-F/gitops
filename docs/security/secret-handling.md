@@ -54,7 +54,10 @@ The current intended workload consumption patterns are:
   with `url`, `username`, and `password` keys.
 - Workload image pulls for private GHCR images: existing Secret `ghcr-pull`,
   type `kubernetes.io/dockerconfigjson`, key `.dockerconfigjson`, consumed
-  through `imagePullSecrets`.
+  only through `imagePullSecrets`.
+- Crossplane Helm OCI chart authentication: existing Secret `ghcr-chart-pull`,
+  type `Opaque`, keys `username` and `password`, consumed only through
+  Helm `chart.pullSecretRef`.
 - All tenant runtime Secrets remain namespace-scoped.
 
 ## Tenant Runtime-Secret Delivery
@@ -75,9 +78,16 @@ Google Secret Manager
 | --- | --- | --- | --- |
 | `avwx-api-key` | `api-keys` | `Opaque` | `avwx-api-key` |
 | `ghcr-pull` | `ghcr-pull` | `kubernetes.io/dockerconfigjson` | `.dockerconfigjson` |
+| `ghcr-pull` | `ghcr-chart-pull` | `Opaque` | `username`, `password` |
 
-`ghcr-pull` is for workload image pulls. `hochschule-jz` is non-secret
-registry metadata.
+`ghcr-pull` is only for Kubernetes workload image pulls. `ghcr-chart-pull` is
+only for Crossplane Helm OCI chart authentication and contains only `username`
+and `password`. Both GHCR contracts source the same protected Google Secret
+Manager material, while `hochschule-jz` remains non-secret registry metadata.
+No credentials, tokens, Docker config payloads, or chart-auth payloads are
+committed to Git.
+
+This prerequisite implementation does not provision tenant workloads yet.
 
 Source payloads are seeded outside Git and must never be placed in Git,
 Terraform state, logs, PR descriptions, screenshots, or documentation. The AVWX
