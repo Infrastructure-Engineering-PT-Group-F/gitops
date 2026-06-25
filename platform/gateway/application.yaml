@@ -20,6 +20,7 @@ spec:
   ignoreDifferences:
     - group: gateway.networking.k8s.io
       kind: GatewayClass
+      name: envoy-gateway
       jsonPointers:
         - /metadata/finalizers
   syncPolicy:
