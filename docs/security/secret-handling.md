@@ -88,6 +88,7 @@ No credentials, tokens, Docker config payloads, or chart-auth payloads are
 committed to Git.
 
 This prerequisite implementation does not provision tenant workloads yet.
+The namespace-local Roles and RoleBindings remain dynamic because each XTenant-owned credential helper must bind its tenant-specific ESO reader ServiceAccount and token-creation permissions only within that tenant namespace.
 
 Source payloads are seeded outside Git and must never be placed in Git,
 Terraform state, logs, PR descriptions, screenshots, or documentation. The AVWX
