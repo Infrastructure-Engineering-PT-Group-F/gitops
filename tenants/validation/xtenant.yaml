@@ -1,0 +1,21 @@
+---
+# Validation tenant application stack.
+#
+# The namespace, runtime-secret delivery and resource limits remain ArgoCD-owned
+# in this first XTenant milestone. Crossplane renders the tenant database,
+# database credential helper resources, and the backend/frontend Helm releases.
+apiVersion: platform.fh-burgenland.at/v1alpha1
+kind: XTenant
+metadata:
+  name: validation
+  namespace: tenant-validation
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  parameters:
+    name: validation
+    environment: validation
+    hostname: validation.gcp.ajdininfrastructure.lol
+    backendImageTag: "v1.3.1"
+    frontendImageTag: "v1.0.0"
+    size: small
