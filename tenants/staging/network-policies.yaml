@@ -4,8 +4,8 @@
 # The default-deny policy makes all tenant Pods isolated for ingress and egress.
 # The following allow policies open only the traffic the weather-app tenant needs:
 # DNS, Gateway ingress to app Pods, backend-to-Cloud SQL on the Private Services
-# Access range, and backend public HTTPS for the external weather API
-# integration.
+# Access range, backend public HTTPS for the external weather API integration,
+# and Managed Prometheus scraping of the backend metrics endpoint.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -105,3 +105,26 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-scrape-to-backend
+  namespace: tenant-staging
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  # Backend only: the frontend serves static assets and exposes no metrics.
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: weather-app-backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gmp-system
+      ports:
+        - protocol: TCP
+          port: 8080

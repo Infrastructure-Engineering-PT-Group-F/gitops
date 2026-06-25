@@ -156,6 +156,7 @@ The staging policy model is:
 | `allow-dns-egress` | All tenant Pods | DNS to kube-system and the GKE Service CIDR on TCP/UDP 53 |
 | `allow-gateway-ingress-to-apps` | Backend and frontend Pods | Envoy Gateway data-plane ingress on TCP 8080 |
 | `allow-backend-required-egress` | Backend Pods | Cloud SQL on TCP 5432 and public HTTPS on TCP 443 |
+| `allow-monitoring-scrape-to-backend` | Backend Pods | Managed Prometheus collectors in `gmp-system` scraping `/actuator/prometheus` on TCP 8080 |
 
 Selectors intentionally use stable Helm chart labels inside the tenant
 namespace: `app.kubernetes.io/name=weather-app-backend` and
@@ -173,13 +174,16 @@ traffic to that range on TCP 5432. The backend also needs public HTTPS egress fo
 the external weather/METAR API integration. That rule excludes RFC1918 ranges so
 it does not reopen private VPC, Pod, Service, or cross-tenant access.
 
-The policies express the desired GitOps model, but Kubernetes only enforces
-`NetworkPolicy` when the cluster dataplane supports it. The current
-infrastructure code does not explicitly enable the GKE Network Policy add-on or
-Dataplane V2, so cross-tenant blocking must be treated as unproven until the
-negative validation test below succeeds on the live cluster. If enforcement is
-not active, close the gap in the infrastructure repository before relying on
-these policies as a security boundary.
+Monitoring uses Google Managed Service for Prometheus (GMP) managed collection.
+The managed collectors run in the `gmp-system` namespace and scrape the backend
+`/actuator/prometheus` endpoint on the application port (TCP 8080). Under
+default-deny that scrape would be blocked, so `allow-monitoring-scrape-to-backend`
+permits ingress to the backend Pods from `gmp-system` only. It is scoped to the
+backend (the frontend exposes no metrics) and does not open the metrics endpoint
+to any other source. If the backend later moves Actuator to a dedicated
+management port, update the policy port to match. The `PodMonitoring` resource
+and metrics-endpoint hardening are tracked separately (see
+`docs/monitoring/basic-monitoring-approach.md`).
 
 ### Validation
 
@@ -216,6 +220,23 @@ kubectl -n tenant-staging run np-deny-test --rm -it --restart=Never `
 For database validation, verify that the backend remains healthy after
 `weather-app-backend-db` is populated and the SQLInstance has a private host.
 Do not print Secret data during validation.
+
+For the monitoring allow rule, confirm the GMP collectors exist and that the
+backend scrape target is healthy once a `PodMonitoring` is configured:
+
+```powershell
+# Managed Prometheus collectors that the allow rule scopes to.
+kubectl get pods -n gmp-system --show-labels
+
+# After a PodMonitoring exists, the backend target should report up=1
+# (GMP target status), and the negative test below must still fail.
+kubectl describe podmonitoring -n tenant-staging
+
+# Denied: a Pod outside gmp-system must not reach the backend metrics port.
+kubectl -n tenant-staging run np-metrics-deny --rm -it --restart=Never `
+  --image=curlimages/curl:8.8.0 `
+  -- curl -m 5 -fsS http://weather-app-backend:8080/actuator/prometheus
+```
 
 ## Add a tenant
 
