@@ -11,6 +11,75 @@ Developers consume it from `tenants/` without touching the underlying resources.
 Validate offline with `crossplane render` / `crossplane beta validate` - no
 cluster required to author these.
 
+## XTenant - tenant application stack
+
+`XTenant` (`platform.fh-burgenland.at/v1alpha1`, namespaced) is the tenant
+application API. One `XTenant` is committed in the tenant namespace and the
+`xtenant-weather-app` Composition renders the tenant database and application
+Helm releases.
+
+The tenant namespace itself remains ArgoCD-owned in this first milestone. The
+namespace baseline, runtime-secret delivery, ResourceQuota and LimitRange stay
+as explicit manifests under `tenants/<name>/`. The Composition starts after
+those prerequisites and renders:
+
+- a tenant `SQLInstance` named `weather-app-db`
+- namespace-local ESO helper resources that build `weather-app-backend-db`
+- a backend Helm `Release` of `weather-app-backend`
+- a frontend Helm `Release` of `weather-app-frontend`
+
+| Parameter | Required | Default | Purpose |
+|-----------|----------|---------|---------|
+| `name` | yes | - | Short tenant identifier, for labels and operational ownership. |
+| `environment` | yes | - | `staging`, `validation`, or `production`. |
+| `hostname` | yes | - | Tenant hostname under `*.gcp.ajdininfrastructure.lol`. |
+| `backendImageTag` | yes | - | Backend image tag passed to the backend chart. |
+| `frontendImageTag` | yes | - | Frontend image tag passed to the frontend chart. |
+| `size` | no | `small` | Future quota/limit size class. Accepted now, not rendered yet. |
+
+```yaml
+apiVersion: platform.fh-burgenland.at/v1alpha1
+kind: XTenant
+metadata:
+  name: validation
+  namespace: tenant-validation
+spec:
+  parameters:
+    name: validation
+    environment: validation
+    hostname: validation.gcp.ajdininfrastructure.lol
+    backendImageTag: "v1.3.1"
+    frontendImageTag: "v1.0.0"
+```
+
+### Render flow
+
+1. ArgoCD applies the tenant namespace, runtime-secret delivery and resource
+   limits from `tenants/<name>/`.
+2. ArgoCD applies the namespaced `XTenant`.
+3. Crossplane renders the `SQLInstance`, which provisions Cloud SQL and writes
+   the non-secret connection Secret `weather-app-backend-db-conn`.
+4. Crossplane renders namespace-local ESO helper resources. ESO combines the
+   generated password with the connection Secret and creates
+   `weather-app-backend-db`.
+5. Crossplane renders the backend and frontend Helm releases with chart pull
+   credentials from `ghcr-chart-pull`. The backend uses the `external-pg`
+   profile, `api-keys`, and `weather-app-backend-db`.
+
+### Current routing boundary
+
+The backend chart already supports Gateway API `HTTPRoute` and the Composition
+attaches it to `shared-gateway` in `platform-gateway` on the `https` listener.
+The frontend chart currently supports Ingress but not Gateway API `HTTPRoute`,
+so this first `XTenant` Composition deploys the frontend workload and Service
+but does not make it publicly reachable yet. Frontend Gateway API support, or a
+separate approved route owner, is required before the same-hostname frontend
+acceptance criterion can be completed.
+
+NetworkPolicies from #6 and the monitoring follow-up in #85 are intentionally
+not rendered by `XTenant` yet. ResourceQuota and LimitRange from #7 also remain
+ArgoCD-owned static tenant manifests in this milestone.
+
 ## SQLInstance - tenant Cloud SQL (Postgres)
 
 `SQLInstance` (`platform.fh-burgenland.at/v1alpha1`, namespaced) is the self-service

@@ -2,12 +2,12 @@
 
 Per-tenant resources for the multi-tenant platform. One subfolder per tenant.
 
-In the target model each tenant is a **Composite Resource (XR)** against the
-`catalog/` abstraction, and the catalog Composition (Crossplane) provisions the
-tenant namespace, network policies, resource quotas, and the backend and
-frontend Helm releases. Until that Composition lands, the namespace baseline
-below is applied directly by ArgoCD, so the staging tenant is reproducible
-either way.
+In the current model each tenant has an ArgoCD-owned namespace baseline and a
+namespaced **Composite Resource (XR)** against the `catalog/` abstraction. The
+first `XTenant` Composition renders the tenant database, database credential
+helper resources, and backend/frontend Helm releases. Resource limits, and any
+tenant NetworkPolicies that are in scope for that tenant, remain explicit
+ArgoCD-owned manifests for now.
 
 - `staging/`: permanent staging tenant. Validate new app versions here before
   promoting to production tenants.
@@ -17,8 +17,39 @@ either way.
 
 `application.yaml` is the ArgoCD child Application for this directory. The
 Terraform-owned root App-of-Apps discovers it and this child Application
-reconciles tenant manifests from `tenants/` recursively, including the current
-`staging/namespace.yaml` baseline.
+reconciles tenant manifests from `tenants/` recursively, including namespace
+baselines and namespaced `XTenant` resources.
+
+## XTenant application stack
+
+`XTenant` is the tenant application resource. It is namespaced because this repo
+uses Crossplane v2, where the onboarding unit is a tenant directory containing
+the namespace baseline plus the namespaced XR.
+
+The current fields are:
+
+| Field | Purpose |
+| ----- | ------- |
+| `name` | Short tenant identifier, without the `tenant-` namespace prefix. |
+| `environment` | `staging`, `validation`, or `production`. |
+| `hostname` | Public tenant hostname under the platform wildcard domain. |
+| `backendImageTag` | Backend container image tag. |
+| `frontendImageTag` | Frontend container image tag. |
+| `size` | Future size class. `small` is accepted and documented, but quotas still come from static manifests. |
+
+The worked validation example is `validation/xtenant.yaml`. It renders:
+
+- `SQLInstance/weather-app-db`
+- ESO helper resources for `weather-app-backend-db`
+- `Release/weather-app-backend`
+- `Release/weather-app-frontend`
+
+The backend release uses `external-pg`, `api-keys`, `weather-app-backend-db`,
+and an `HTTPRoute` attached to `shared-gateway` in `platform-gateway`. The
+frontend release uses the tenant `ghcr-pull` image-pull Secret and points at
+the tenant backend URL, but the current frontend chart has no Gateway API
+`HTTPRoute` support. Public frontend reachability therefore needs a frontend
+chart follow-up or another approved route owner.
 
 ## Namespace baseline
 
@@ -60,12 +91,11 @@ must include it when validation namespaces participate in that flow.
 
 ### How namespaces are created
 
-In the target model Crossplane creates the namespace through the catalog
-Composition, so a single tenant resource provisions the namespace with this
-exact shape. `staging/namespace.yaml` is the canonical reference for that shape
-and doubles as the directly applied staging namespace until the Composition is
-in place. ArgoCD applies manifests under `tenants/` through the `tenants` child
-Application in this directory.
+Namespaces are ArgoCD-owned in the first `XTenant` milestone. This avoids two
+controllers owning the same namespace and keeps the baseline visible in each
+tenant directory. `staging/namespace.yaml` remains the canonical reference for
+that shape, and `validation/namespace.yaml` is the first tenant namespace used
+with an `XTenant`.
 
 ## Resource quotas and limit ranges
 
@@ -184,8 +214,11 @@ Do not print Secret data during validation.
 
 ## Add a tenant
 
-1. Copy `staging/` to `tenants/<name>/`, rename the namespace to
-   `tenant-<name>`, and set the `tenant` and `environment` labels.
-2. Open a PR following the repository contribution rules.
-3. On merge, ArgoCD applies the resources and, once the catalog Composition is
-   in place, Crossplane provisions the namespace, database, and app instance.
+1. Create `tenants/<name>/` with a namespace baseline, runtime-secret delivery,
+   resource limits, and an `XTenant` resource.
+2. Set the namespace and `XTenant` tenant labels/fields to the same short
+   tenant name.
+3. Choose image tags and a hostname under `*.gcp.ajdininfrastructure.lol`.
+4. Open a PR following the repository contribution rules.
+5. On merge, ArgoCD applies the tenant manifests and Crossplane provisions the
+   database and app releases.

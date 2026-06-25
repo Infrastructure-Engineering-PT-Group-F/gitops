@@ -1,0 +1,404 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xtenant-weather-app
+  labels:
+    provider: helm
+    application: weather-app
+spec:
+  compositeTypeRef:
+    apiVersion: platform.fh-burgenland.at/v1alpha1
+    kind: XTenant
+  mode: Pipeline
+  pipeline:
+    - step: patch-and-transform
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: sqlinstance
+            base:
+              apiVersion: platform.fh-burgenland.at/v1alpha1
+              kind: SQLInstance
+              metadata:
+                name: weather-app-db
+              spec:
+                parameters:
+                  databaseName: appdb
+                  credentialsSecretName: weather-app-backend-db
+                  connectionSecretName: weather-app-backend-db-conn
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+
+          - name: db-password-generator
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-db-password
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: generators.external-secrets.io/v1alpha1
+                    kind: Password
+                    metadata:
+                      name: db-password
+                    spec:
+                      length: 32
+                      digits: 5
+                      symbols: 0
+                      noUpper: false
+                      allowRepeat: true
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+
+          - name: db-secret-reader-serviceaccount
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-db-secret-reader-serviceaccount
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: v1
+                    kind: ServiceAccount
+                    metadata:
+                      name: eso-store-reader
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+
+          - name: db-secret-reader-role
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-db-secret-reader-role
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    kind: Role
+                    metadata:
+                      name: eso-store-reader
+                    rules:
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - secrets
+                        verbs:
+                          - get
+                          - list
+                          - watch
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+
+          - name: db-secret-reader-rolebinding
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-db-secret-reader-rolebinding
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    kind: RoleBinding
+                    metadata:
+                      name: eso-store-reader
+                    subjects:
+                      - kind: ServiceAccount
+                        name: eso-store-reader
+                    roleRef:
+                      apiGroup: rbac.authorization.k8s.io
+                      kind: Role
+                      name: eso-store-reader
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.subjects[0].namespace
+
+          - name: db-secret-reader-token-role
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-db-secret-reader-token-role
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    kind: Role
+                    metadata:
+                      name: eso-store-reader-token
+                    rules:
+                      - apiGroups:
+                          - ""
+                        resources:
+                          - serviceaccounts/token
+                        resourceNames:
+                          - eso-store-reader
+                        verbs:
+                          - create
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+
+          - name: db-secret-reader-token-rolebinding
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-db-secret-reader-token-rolebinding
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: rbac.authorization.k8s.io/v1
+                    kind: RoleBinding
+                    metadata:
+                      name: eso-store-reader-token
+                    subjects:
+                      - kind: ServiceAccount
+                        name: external-secrets
+                        namespace: external-secrets
+                    roleRef:
+                      apiGroup: rbac.authorization.k8s.io
+                      kind: Role
+                      name: eso-store-reader-token
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+
+          - name: db-secret-store
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-db-secret-store
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: external-secrets.io/v1
+                    kind: SecretStore
+                    metadata:
+                      name: in-cluster
+                    spec:
+                      provider:
+                        kubernetes:
+                          remoteNamespace: ""
+                          server:
+                            caProvider:
+                              type: ConfigMap
+                              name: kube-root-ca.crt
+                              key: ca.crt
+                          auth:
+                            serviceAccount:
+                              name: eso-store-reader
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.spec.provider.kubernetes.remoteNamespace
+
+          - name: backend-db-secret
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-backend-db-secret
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: external-secrets.io/v1
+                    kind: ExternalSecret
+                    metadata:
+                      name: weather-app-backend-db
+                    spec:
+                      refreshInterval: "0"
+                      target:
+                        name: weather-app-backend-db
+                        creationPolicy: Owner
+                        template:
+                          engineVersion: v2
+                          data:
+                            username: appdb-user
+                            password: "{{ .password }}"
+                            url: "jdbc:postgresql://{{ .host }}:5432/{{ .database }}"
+                      dataFrom:
+                        - sourceRef:
+                            generatorRef:
+                              apiVersion: generators.external-secrets.io/v1alpha1
+                              kind: Password
+                              name: db-password
+                        - extract:
+                            key: weather-app-backend-db-conn
+                            conversionStrategy: Default
+                            decodingStrategy: None
+                            metadataPolicy: None
+                            nullBytePolicy: Ignore
+                          sourceRef:
+                            storeRef:
+                              name: in-cluster
+                              kind: SecretStore
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+
+          - name: backend-release
+            base:
+              apiVersion: helm.m.crossplane.io/v1beta1
+              kind: Release
+              metadata:
+                name: weather-app-backend
+              spec:
+                forProvider:
+                  chart:
+                    name: weather-app-backend
+                    repository: oci://ghcr.io/infrastructure-engineering-pt-group-f/charts
+                    pullSecretRef:
+                      name: ghcr-chart-pull
+                  skipCreateNamespace: true
+                  wait: true
+                  values:
+                    image:
+                      tag: ""
+                    imagePullSecrets:
+                      - name: ghcr-pull
+                    tenant:
+                      label: ""
+                    podLabels:
+                      platform.fh-burgenland.at/tenant: ""
+                      platform.fh-burgenland.at/environment: ""
+                    spring:
+                      profile: external-pg
+                    database:
+                      useExistingSecret: true
+                      existingSecretName: weather-app-backend-db
+                      urlKey: url
+                      usernameKey: username
+                      passwordKey: password
+                    apiKeys:
+                      useExistingSecret: true
+                      existingSecretName: api-keys
+                      existingSecretKey: avwx-api-key
+                    gateway:
+                      httpRoute:
+                        enabled: true
+                        parentRef:
+                          name: shared-gateway
+                          namespace: platform-gateway
+                          sectionName: https
+                        hostname: ""
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: helm-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.namespace
+              - fromFieldPath: spec.parameters.backendImageTag
+                toFieldPath: spec.forProvider.values.image.tag
+              - fromFieldPath: spec.parameters.name
+                toFieldPath: spec.forProvider.values.tenant.label
+              - fromFieldPath: spec.parameters.name
+                toFieldPath: spec.forProvider.values.podLabels[platform.fh-burgenland.at/tenant]
+              - fromFieldPath: spec.parameters.environment
+                toFieldPath: spec.forProvider.values.podLabels[platform.fh-burgenland.at/environment]
+              - fromFieldPath: spec.parameters.hostname
+                toFieldPath: spec.forProvider.values.gateway.httpRoute.hostname
+
+          - name: frontend-release
+            base:
+              apiVersion: helm.m.crossplane.io/v1beta1
+              kind: Release
+              metadata:
+                name: weather-app-frontend
+              spec:
+                forProvider:
+                  chart:
+                    name: weather-app-frontend
+                    repository: oci://ghcr.io/infrastructure-engineering-pt-group-f/charts
+                    pullSecretRef:
+                      name: ghcr-chart-pull
+                  skipCreateNamespace: true
+                  wait: true
+                  values:
+                    image:
+                      tag: ""
+                    imagePullSecrets:
+                      - name: ghcr-pull
+                    podLabels:
+                      platform.fh-burgenland.at/tenant: ""
+                      platform.fh-burgenland.at/environment: ""
+                    config:
+                      backendApiUrl: ""
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: helm-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.namespace
+              - fromFieldPath: spec.parameters.frontendImageTag
+                toFieldPath: spec.forProvider.values.image.tag
+              - fromFieldPath: spec.parameters.name
+                toFieldPath: spec.forProvider.values.podLabels[platform.fh-burgenland.at/tenant]
+              - fromFieldPath: spec.parameters.environment
+                toFieldPath: spec.forProvider.values.podLabels[platform.fh-burgenland.at/environment]
+              - fromFieldPath: spec.parameters.hostname
+                toFieldPath: spec.forProvider.values.config.backendApiUrl
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "https://%s/api"
