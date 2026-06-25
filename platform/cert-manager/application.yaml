@@ -26,6 +26,13 @@ spec:
             iam.gke.io/gcp-service-account: cert-manager-dns01-sa@dark-diagram-496907-k8.iam.gserviceaccount.com
         extraObjects:
           - |
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: cert-manager
+              annotations:
+                argocd.argoproj.io/sync-wave: "-20"
+          - |
             apiVersion: cert-manager.io/v1
             kind: ClusterIssuer
             metadata:
