@@ -26,6 +26,13 @@ spec:
             iam.gke.io/gcp-service-account: external-secrets-sa@dark-diagram-496907-k8.iam.gserviceaccount.com
         extraObjects:
           - |
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: external-secrets
+              annotations:
+                argocd.argoproj.io/sync-wave: "-20"
+          - |
             apiVersion: external-secrets.io/v1
             kind: ClusterSecretStore
             metadata:
