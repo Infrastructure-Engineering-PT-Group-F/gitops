@@ -23,6 +23,12 @@ rules:
       - patch
       - delete
   - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    verbs:
+      - create
+  - apiGroups:
       - rbac.authorization.k8s.io
     resources:
       - roles
