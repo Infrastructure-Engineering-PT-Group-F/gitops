@@ -45,6 +45,26 @@ spec:
                     dns01:
                       cloudDNS:
                         project: dark-diagram-496907-k8
+          - |
+            apiVersion: cert-manager.io/v1
+            kind: ClusterIssuer
+            metadata:
+              name: letsencrypt-prod-dns01
+              annotations:
+                argocd.argoproj.io/sync-wave: "10"
+            spec:
+              acme:
+                email: "2510781019@hochschule-burgenland.at"
+                server: https://acme-v02.api.letsencrypt.org/directory
+                privateKeySecretRef:
+                  name: letsencrypt-prod-dns01-account-key
+                solvers:
+                  - selector:
+                      dnsZones:
+                        - gcp.ajdininfrastructure.lol
+                    dns01:
+                      cloudDNS:
+                        project: dark-diagram-496907-k8
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager
