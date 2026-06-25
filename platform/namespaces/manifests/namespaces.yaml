@@ -1,0 +1,17 @@
+---
+# Namespaces for add-ons whose charts ship namespaced RBAC but cannot self-create
+# their namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-dns
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: envoy-gateway-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: crossplane-system
