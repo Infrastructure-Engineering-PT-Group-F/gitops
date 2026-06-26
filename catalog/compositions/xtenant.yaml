@@ -303,6 +303,7 @@ spec:
                   chart:
                     name: weather-app-backend
                     repository: oci://ghcr.io/infrastructure-engineering-pt-group-f/charts
+                    version: "1.5.0"
                     # ArgoCD-owned runtime-secret delivery must create this
                     # Secret before provider-helm can pull the private OCI chart.
                     pullSecretRef:
@@ -368,6 +369,7 @@ spec:
                   chart:
                     name: weather-app-frontend
                     repository: oci://ghcr.io/infrastructure-engineering-pt-group-f/charts
+                    version: "1.1.1"
                     # ArgoCD-owned runtime-secret delivery must create this
                     # Secret before provider-helm can pull the private OCI chart.
                     pullSecretRef:

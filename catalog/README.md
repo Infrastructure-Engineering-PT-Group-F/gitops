@@ -49,8 +49,8 @@ spec:
     name: validation
     environment: validation
     hostname: validation.gcp.ajdininfrastructure.lol
-    backendImageTag: "v1.3.1"
-    frontendImageTag: "v1.0.0"
+    backendImageTag: "v1.5.0"
+    frontendImageTag: "v1.1.1"
 ```
 
 ### Render flow
