@@ -1,0 +1,24 @@
+---
+# Demo tenant application stack — created live during the presentation finale.
+#
+# Cloned from tenants/validation. IMPORTANT: spec.parameters.environment is an
+# enum restricted to staging | validation | production (see
+# catalog/xrds/xtenant.yaml). It intentionally stays "validation" even though the
+# tenant is named "demo" — only name / namespace / hostname / labels change
+# between tenants. Setting environment to "demo" would make Crossplane reject the
+# claim.
+apiVersion: platform.fh-burgenland.at/v1alpha1
+kind: XTenant
+metadata:
+  name: demo
+  namespace: tenant-demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  parameters:
+    name: demo
+    environment: validation
+    hostname: demo.gcp.ajdininfrastructure.lol
+    backendImageTag: "v1.5.0"
+    frontendImageTag: "v1.1.1"
+    size: small
