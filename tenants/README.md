@@ -10,7 +10,9 @@ tenant NetworkPolicies that are in scope for that tenant, remain explicit
 ArgoCD-owned manifests for now.
 
 - `staging/`: permanent staging tenant. Validate new app versions here before
-  promoting to production tenants.
+  promoting to production tenants. Use the
+  [staging validation checklist](../docs/operations/staging-validation.md) before
+  promoting a version.
 - `validation/`: non-production validation tenant for runtime-secret delivery
   and tenant integration checks.
 - `<tenant>/`: one folder per production tenant.
