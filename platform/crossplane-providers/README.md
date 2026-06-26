@@ -90,13 +90,14 @@ they need.
 
 `provider-kubernetes` can manage only namespaces, resource quotas, limit ranges,
 secrets, service accounts, namespace-local RBAC, ESO SecretStores,
-ExternalSecrets, password generators, and network policies. The ESO and RBAC
-permissions exist solely for future namespaced tenant DB credential helper
-resources; this prerequisite change does not provision tenant workloads.
+ExternalSecrets, password generators, network policies, and Gateway API
+HTTPRoutes for tenant routing. The ESO and RBAC permissions exist solely for
+namespaced tenant DB credential helper resources.
 
 `provider-helm` can manage only secrets, services, service accounts, deployments,
-horizontal pod autoscalers, ingresses, Gateway API HTTPRoutes, and Prometheus
-Operator ServiceMonitors rendered by the tenant Helm charts.
+observe ReplicaSets for Helm release readiness, horizontal pod autoscalers,
+ingresses, Gateway API HTTPRoutes, and Prometheus Operator ServiceMonitors
+rendered by the tenant Helm charts.
 
 This supports soft multi-tenancy, but it is not a hard object-name boundary:
 Kubernetes RBAC can restrict resource types and namespaces, but it cannot restrict
