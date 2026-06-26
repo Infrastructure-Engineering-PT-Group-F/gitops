@@ -141,7 +141,12 @@ kubectl describe certificate wildcard-gcp -n platform-gateway
 ```sh
 # external-dns manages records from HTTPRoute/Gateway hostnames.
 kubectl logs -n external-dns deploy/external-dns --tail=50
-# Does the tenant hostname resolve to the Gateway IP (34.76.110.102)?
+# Get the current Gateway IP. It can change on a Terraform reapply, so read it
+# live rather than assuming a fixed value. From the cluster:
+kubectl get gateway shared-gateway -n platform-gateway \
+  -o jsonpath='{.status.addresses[*].value}{"\n"}'
+# or from the IaC source of truth: terraform output in infrastructure/platform.
+# Then confirm the tenant hostname resolves to that IP:
 dig +short <name>.gcp.ajdininfrastructure.lol
 ```
 
