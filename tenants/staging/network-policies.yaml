@@ -126,5 +126,6 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: gmp-system
       ports:
+        # Internal management port (Actuator/metrics), not the public app port.
         - protocol: TCP
-          port: 8080
+          port: 8081
