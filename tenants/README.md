@@ -227,9 +227,9 @@ Do not print Secret data during validation.
 
 1. Copy an existing tenant directory (for example `validation/`) to
    `tenants/<name>/`. It contains a namespace baseline, runtime-secret delivery,
-   resource limits, and an `XTenant` resource. **Do not add an
-   `application.yaml`** — the `tenants` ApplicationSet generates the per-tenant
-   Application automatically from the directory name.
+   resource limits, a `PodMonitoring` (`monitoring.yaml`), and an `XTenant`
+   resource. **Do not add an `application.yaml`** — the `tenants` ApplicationSet
+   generates the per-tenant Application automatically from the directory name.
 2. Rename the namespace to `tenant-<name>` and set the `XTenant` `name`/labels to
    the same short tenant name; pick the `environment` (`staging`, `validation`,
    or `production`).

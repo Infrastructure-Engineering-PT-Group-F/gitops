@@ -193,37 +193,6 @@ The monitoring MVP must remain cost-aware.
 
 ## Implementation Boundaries and Follow-up Work
 
-### GitOps Issue #13 - Basic Health and Resource Dashboard
-
-GitOps issue #13 is the implementation follow-up for this decision.
-
-The implementation scope should be:
-
-1. Create exactly one standalone, namespace-scoped
-   `monitoring.googleapis.com/v1` `PodMonitoring` manifest under
-   `tenants/staging/`.
-2. Reconcile that manifest through the existing tenant Argo CD Application.
-3. Do not render the initial GMP PodMonitoring from the backend Helm chart.
-4. Before synchronizing the manifest, update the relevant GitOps and Argo CD
-   authorization policy so the namespaced `PodMonitoring` kind in API group
-   `monitoring.googleapis.com` can be reconciled.
-5. Do not grant the backend workload permissions to create or manage
-   PodMonitoring resources.
-6. Keep the backend chart's optional Prometheus Operator ServiceMonitor
-   disabled. Do not enable `monitoring.coreos.com/v1` ServiceMonitor and GMP
-   PodMonitoring for the same backend target.
-7. Select only staging backend Pods using the existing backend chart selector
-   labels, including the staging Helm-release instance label, and use the named
-   `http` container port.
-8. Scrape `/actuator/prometheus` only after the backend management endpoint is
-   confirmed internal-only and not reachable through a public HTTPRoute.
-9. Confirm target availability through the PromQL query `up`.
-10. Create two Cloud Monitoring dashboard views:
-   - Internal application-owner view filtered to `tenant-staging`.
-   - Platform-administrator view across platform namespaces.
-11. Record dashboard configuration, screenshots, and safe validation evidence.
-12. Keep alert policies optional until the tenant baseline is stable.
-
 ### GitOps Issue #39 - Tenant Composition
 
 After the XTenant Composition is implemented, monitoring should become a tenant
@@ -243,19 +212,6 @@ lifecycle concern:
 
 Cloud SQL and database health metrics are deferred until the real private-IP
 Cloud SQL and ESO credential delivery flow is validated and cleaned up.
-
-### Backend Follow-up
-
-Before GMP scraping is implemented, create or assign a backend hardening task
-that verifies all of the following:
-
-- The management endpoint is not reachable through public HTTPRoute routing.
-- Actuator exposure is restricted to the minimum required endpoints.
-- Health details are not unnecessarily public.
-- The Prometheus endpoint remains reachable only from the intended in-cluster
-  collector path.
-- Application metric labels comply with the security and cardinality rules in
-  this document.
 
 ## Ownership Model
 
