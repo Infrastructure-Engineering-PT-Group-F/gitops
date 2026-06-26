@@ -6,11 +6,11 @@ cluster by ArgoCD, not by hand.
 
 ## Layout
 
-| Path | Purpose |
-|------|---------|
-| `platform/` | Cluster platform add-ons as ArgoCD `Application`s (Helm). |
-| `catalog/` | Crossplane service catalog - XRDs + Compositions that define what a "tenant" is. |
-| `tenants/` | Per-tenant Composite Resources (XRs) |
+| Path        | Purpose                                                                          |
+| ----------- | -------------------------------------------------------------------------------- |
+| `platform/` | Cluster platform add-ons as ArgoCD `Application`s (Helm).                        |
+| `catalog/`  | Crossplane service catalog - XRDs + Compositions that define what a "tenant" is. |
+| `tenants/`  | Per-tenant Composite Resources (XRs)                                             |
 
 ## Adding a tenant
 
@@ -33,14 +33,14 @@ Child Applications run under the restricted `platform` ArgoCD `AppProject`
 project, so every `application.yaml` sets `spec.project: platform`. The project
 allowlists the permitted source repos, so **adding a platform add-on that pulls
 from a new chart repo also requires adding that repo to the project's
-`sourceRepos` in `infrastructure/platform/argocd.tf`** — otherwise ArgoCD rejects
-the Application.
+`sourceRepos` in `infrastructure/platform/argocd.tf`** — otherwise ArgoCD
+rejects the Application.
 
 ## Security and Secrets
 
 See [Secret Handling](docs/security/secret-handling.md) for the secret
-management architecture, repository rules, local-development exception and
-audit procedure.
+management architecture, repository rules, local-development exception and audit
+procedure.
 
 ## Monitoring (Bonus)
 
@@ -48,6 +48,12 @@ See [Basic Monitoring Approach](docs/monitoring/basic-monitoring-approach.md)
 for the documented Google Cloud Monitoring and Google Managed Service for
 Prometheus decision, monitoring baseline, ownership model, security rules, and
 implementation boundaries.
+
+## Operations
+
+See [Operational Runbook](docs/operations/runbook.md) for read-only health
+checks across GitOps, Crossplane, tenants, TLS, DNS and secrets, plus the common
+failure cases and the post-rebuild recovery steps.
 
 ## Contributing
 
