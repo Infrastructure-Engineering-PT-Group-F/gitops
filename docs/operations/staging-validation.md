@@ -26,10 +26,15 @@ Related docs:
 | 4  | Frontend reachable                                 | `curl -sS -m 8 -o /dev/null -w "%{http_code}\n" https://<host>/`                                                        | `200`                                                                                |
 | 5  | Backend connects to the database                   | `kubectl get secret weather-app-backend-db -n tenant-<name>` and check backend logs                                     | Secret present, backend healthy, no DB connection errors                             |
 | 6  | HTTPS certificate valid                            | `curl -sSI https://<host>/api/metar/LOWW` (no TLS error) and `kubectl get certificate wildcard-gcp -n platform-gateway` | TLS handshake succeeds, certificate `Ready=True`                                     |
-| 7  | DNS record exists                                  | `dig +short <host>`                                                                                                     | Resolves to the Gateway IP `34.76.110.102`                                           |
+| 7  | DNS record exists                                  | `dig +short <host>`                                                                                                     | Resolves to the current Gateway IP (see note)                                           |
 | 8  | Network policies allow required and block unwanted | `kubectl get networkpolicy -n tenant-<name>` plus the negative test below                                               | Required traffic works, an unlabeled or cross-namespace pod cannot reach the backend |
 | 9  | Quotas and limits do not break the deployment      | `kubectl get resourcequota,limitrange -n tenant-<name>`                                                                 | Pods `Running`, usage within the quota, no pod rejected for missing requests         |
 | 10 | Application update tested                          | Bump `backendImageTag`/`frontendImageTag`, then re-run checks 1-9                                                       | Rollout completes and all checks pass on the new version                             |
+
+> The Gateway IP is not fixed, it can change on a Terraform reapply. Get the
+> current value from the cluster with
+> `kubectl get gateway shared-gateway -n platform-gateway -o jsonpath='{.status.addresses[*].value}'`,
+> or from `terraform output` in `infrastructure/platform`.
 
 ### Network policy negative test (check 8)
 
