@@ -141,17 +141,13 @@ database, or secrets. Offboarding is therefore an explicit operation, see
    `https` listener. The frontend uses `ghcr-pull` for its private image and
    points at the tenant backend URL.
 
-### Known routing boundary
+### Tenant routing
 
-The backend chart supports the Gateway API `HTTPRoute`, so the backend is
-publicly reachable on the tenant hostname. The frontend chart currently supports
-Ingress but not the Gateway API `HTTPRoute`, so the frontend workload and
-Service deploy but are not publicly reachable yet. Closing this gap, by adding
-`HTTPRoute` support to the frontend chart or another approved route owner, is
-tracked in
-[frontend #34](https://github.com/Infrastructure-Engineering-PT-Group-F/frontend/issues/34)
-and the onboarding implementation issue
-[gitops #97](https://github.com/Infrastructure-Engineering-PT-Group-F/gitops/issues/97).
+The `XTenant` Composition renders the public routing directly as two
+`HTTPRoute`s on `shared-gateway` in `platform-gateway` (the `https` listener),
+both on the tenant hostname under the wildcard certificate: `/api` routes to the
+backend and `/` routes to the frontend. Both the backend and the frontend are
+therefore publicly reachable on the tenant hostname.
 
 ## Secrets and database credentials
 
