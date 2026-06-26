@@ -337,12 +337,9 @@ spec:
                       existingSecretKey: avwx-api-key
                     gateway:
                       httpRoute:
-                        enabled: true
-                        parentRef:
-                          name: shared-gateway
-                          namespace: platform-gateway
-                          sectionName: https
-                        hostname: ""
+                        # XTenant renders the tenant HTTPRoutes directly so the
+                        # backend is scoped to /api and the frontend owns /.
+                        enabled: false
                 providerConfigRef:
                   kind: ClusterProviderConfig
                   name: helm-provider
@@ -359,8 +356,6 @@ spec:
                 toFieldPath: spec.forProvider.values.podLabels[platform.fh-burgenland.at/tenant]
               - fromFieldPath: spec.parameters.environment
                 toFieldPath: spec.forProvider.values.podLabels[platform.fh-burgenland.at/environment]
-              - fromFieldPath: spec.parameters.hostname
-                toFieldPath: spec.forProvider.values.gateway.httpRoute.hostname
 
           - name: frontend-release
             base:
@@ -412,3 +407,81 @@ spec:
                     string:
                       type: Format
                       fmt: "https://%s/api"
+
+          - name: backend-api-route
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-backend-api-route
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: gateway.networking.k8s.io/v1
+                    kind: HTTPRoute
+                    metadata:
+                      name: weather-app-backend-api
+                    spec:
+                      parentRefs:
+                        - name: shared-gateway
+                          namespace: platform-gateway
+                          sectionName: https
+                      hostnames:
+                        - ""
+                      rules:
+                        - matches:
+                            - path:
+                                type: PathPrefix
+                                value: /api
+                          backendRefs:
+                            - name: weather-app-backend
+                              port: 8080
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+              - fromFieldPath: spec.parameters.hostname
+                toFieldPath: spec.forProvider.manifest.spec.hostnames[0]
+
+          - name: frontend-route
+            base:
+              apiVersion: kubernetes.m.crossplane.io/v1alpha1
+              kind: Object
+              metadata:
+                name: tenant-frontend-route
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: gateway.networking.k8s.io/v1
+                    kind: HTTPRoute
+                    metadata:
+                      name: weather-app-frontend
+                    spec:
+                      parentRefs:
+                        - name: shared-gateway
+                          namespace: platform-gateway
+                          sectionName: https
+                      hostnames:
+                        - ""
+                      rules:
+                        - matches:
+                            - path:
+                                type: PathPrefix
+                                value: /
+                          backendRefs:
+                            - name: weather-app-frontend
+                              port: 8080
+                providerConfigRef:
+                  kind: ClusterProviderConfig
+                  name: kubernetes-provider
+            patches:
+              - fromFieldPath: metadata.namespace
+                toFieldPath: metadata.namespace
+              - fromFieldPath: metadata.namespace
+                toFieldPath: spec.forProvider.manifest.metadata.namespace
+              - fromFieldPath: spec.parameters.hostname
+                toFieldPath: spec.forProvider.manifest.spec.hostnames[0]

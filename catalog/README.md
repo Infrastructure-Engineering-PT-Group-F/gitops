@@ -27,6 +27,7 @@ those prerequisites and renders:
 - namespace-local ESO helper resources that build `weather-app-backend-db`
 - a backend Helm `Release` of `weather-app-backend`
 - a frontend Helm `Release` of `weather-app-frontend`
+- Gateway API `HTTPRoute`s for `/api` to the backend and `/` to the frontend
 
 | Parameter | Required | Default | Purpose |
 |-----------|----------|---------|---------|
@@ -68,16 +69,16 @@ spec:
    credentials from `ghcr-chart-pull`. The backend uses the `external-pg`
    profile, `api-keys`, and `weather-app-backend-db`; the frontend uses
    `ghcr-pull` for private image pulls.
+6. Crossplane renders tenant `HTTPRoute`s on the shared HTTPS Gateway:
+   `/api` goes to the backend Service and `/` goes to the frontend Service.
 
-### Current routing boundary
+### Tenant routing
 
-The backend chart already supports Gateway API `HTTPRoute` and the Composition
-attaches it to `shared-gateway` in `platform-gateway` on the `https` listener.
-The frontend chart currently supports Ingress but not Gateway API `HTTPRoute`,
-so this first `XTenant` Composition deploys the frontend workload and Service
-but does not make it publicly reachable yet. Frontend Gateway API support, or a
-separate approved route owner, is required before the same-hostname frontend
-acceptance criterion can be completed.
+`XTenant` renders the public Gateway API routing directly. The backend chart's
+own catch-all `HTTPRoute` is disabled so the tenant can use the same hostname
+for both components: `/api` is routed to `weather-app-backend`, while `/` is
+routed to `weather-app-frontend`. Both routes attach to `shared-gateway` in
+`platform-gateway` on the `https` listener.
 
 NetworkPolicies from #6 and the monitoring follow-up in #85 are intentionally
 not rendered by `XTenant` yet. ResourceQuota and LimitRange from #7 also remain

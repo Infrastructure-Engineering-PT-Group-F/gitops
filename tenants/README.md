@@ -49,13 +49,14 @@ The worked validation example is `validation/xtenant.yaml`. It renders:
 - ESO helper resources for `weather-app-backend-db`
 - `Release/weather-app-backend`
 - `Release/weather-app-frontend`
+- `HTTPRoute/weather-app-backend-api`
+- `HTTPRoute/weather-app-frontend`
 
 The backend release uses `external-pg`, `api-keys`, `weather-app-backend-db`,
-and an `HTTPRoute` attached to `shared-gateway` in `platform-gateway`. The
-frontend release uses the tenant `ghcr-pull` image-pull Secret and points at
-the tenant backend URL, but the current frontend chart has no Gateway API
-`HTTPRoute` support. Public frontend reachability therefore needs a frontend
-chart follow-up or another approved route owner.
+and the tenant `ghcr-pull` image-pull Secret. The frontend release uses the
+same `ghcr-pull` Secret and points at the tenant backend URL. The Composition
+renders the public Gateway API routes directly: `/api` goes to the backend and
+`/` goes to the frontend on the tenant hostname.
 
 `api-keys`, `ghcr-pull`, and `ghcr-chart-pull` are prerequisites for the Helm
 releases. They are delivered by the ArgoCD-owned runtime-secret manifests, not
