@@ -51,6 +51,11 @@ the tenant backend URL, but the current frontend chart has no Gateway API
 `HTTPRoute` support. Public frontend reachability therefore needs a frontend
 chart follow-up or another approved route owner.
 
+`api-keys`, `ghcr-pull`, and `ghcr-chart-pull` are prerequisites for the Helm
+releases. They are delivered by the ArgoCD-owned runtime-secret manifests, not
+by the `XTenant` Composition, so each tenant directory must include that secret
+delivery before its `XTenant` can reconcile to Ready.
+
 ## Namespace baseline
 
 Every tenant gets exactly one namespace. It is the foundation for the tenant
@@ -218,7 +223,9 @@ Do not print Secret data during validation.
    resource limits, and an `XTenant` resource.
 2. Set the namespace and `XTenant` tenant labels/fields to the same short
    tenant name.
-3. Choose image tags and a hostname under `*.gcp.ajdininfrastructure.lol`.
-4. Open a PR following the repository contribution rules.
-5. On merge, ArgoCD applies the tenant manifests and Crossplane provisions the
+3. Confirm runtime-secret delivery creates `api-keys`, `ghcr-pull`, and
+   `ghcr-chart-pull` before the `XTenant` is expected to become Ready.
+4. Choose image tags and a hostname under `*.gcp.ajdininfrastructure.lol`.
+5. Open a PR following the repository contribution rules.
+6. On merge, ArgoCD applies the tenant manifests and Crossplane provisions the
    database and app releases.

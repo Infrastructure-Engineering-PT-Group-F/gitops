@@ -303,6 +303,8 @@ spec:
                   chart:
                     name: weather-app-backend
                     repository: oci://ghcr.io/infrastructure-engineering-pt-group-f/charts
+                    # ArgoCD-owned runtime-secret delivery must create this
+                    # Secret before provider-helm can pull the private OCI chart.
                     pullSecretRef:
                       name: ghcr-chart-pull
                   skipCreateNamespace: true
@@ -310,6 +312,8 @@ spec:
                   values:
                     image:
                       tag: ""
+                    # ArgoCD-owned runtime-secret delivery must create this
+                    # Secret before tenant Pods can pull private GHCR images.
                     imagePullSecrets:
                       - name: ghcr-pull
                     tenant:
@@ -327,6 +331,8 @@ spec:
                       passwordKey: password
                     apiKeys:
                       useExistingSecret: true
+                      # ArgoCD-owned runtime-secret delivery must create this
+                      # Secret before the backend Deployment can become Ready.
                       existingSecretName: api-keys
                       existingSecretKey: avwx-api-key
                     gateway:
@@ -367,6 +373,8 @@ spec:
                   chart:
                     name: weather-app-frontend
                     repository: oci://ghcr.io/infrastructure-engineering-pt-group-f/charts
+                    # ArgoCD-owned runtime-secret delivery must create this
+                    # Secret before provider-helm can pull the private OCI chart.
                     pullSecretRef:
                       name: ghcr-chart-pull
                   skipCreateNamespace: true
@@ -374,6 +382,8 @@ spec:
                   values:
                     image:
                       tag: ""
+                    # ArgoCD-owned runtime-secret delivery must create this
+                    # Secret before tenant Pods can pull private GHCR images.
                     imagePullSecrets:
                       - name: ghcr-pull
                     podLabels:
