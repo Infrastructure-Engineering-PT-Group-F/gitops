@@ -134,8 +134,9 @@ contexts.
   set restricted-compatible security contexts.
 - **NetworkPolicies are currently static per tenant** (committed under
   `tenants/<name>/`) rather than rendered by the `XTenant` Composition. The
-  staging and validation tenants carry the full model. Generalizing it into the
-  Composition is future work.
+  staging and validation tenants both carry the default-deny baseline and the
+  allow rules, with the Managed Prometheus scrape allowance staging-only for now.
+  Generalizing this into the Composition is future work.
 - **Shared ingress.** All tenants share one Gateway, one public IP and one
   wildcard certificate. Isolation at the edge is by hostname and route, not by a
   dedicated load balancer per tenant.
