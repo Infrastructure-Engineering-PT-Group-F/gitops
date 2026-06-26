@@ -55,7 +55,9 @@ spec:
 ### Render flow
 
 1. ArgoCD applies the tenant namespace, runtime-secret delivery and resource
-   limits from `tenants/<name>/`.
+   limits from `tenants/<name>/`. Runtime-secret delivery must create
+   `api-keys`, `ghcr-pull`, and `ghcr-chart-pull` before the Helm releases can
+   become Ready.
 2. ArgoCD applies the namespaced `XTenant`.
 3. Crossplane renders the `SQLInstance`, which provisions Cloud SQL and writes
    the non-secret connection Secret `weather-app-backend-db-conn`.
@@ -64,7 +66,8 @@ spec:
    `weather-app-backend-db`.
 5. Crossplane renders the backend and frontend Helm releases with chart pull
    credentials from `ghcr-chart-pull`. The backend uses the `external-pg`
-   profile, `api-keys`, and `weather-app-backend-db`.
+   profile, `api-keys`, and `weather-app-backend-db`; the frontend uses
+   `ghcr-pull` for private image pulls.
 
 ### Current routing boundary
 
