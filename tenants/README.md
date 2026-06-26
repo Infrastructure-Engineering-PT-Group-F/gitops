@@ -237,7 +237,11 @@ Do not print Secret data during validation.
    `*.gcp.ajdininfrastructure.lol`.
 4. No per-tenant secret seeding is needed: `api-keys`, `ghcr-pull`, and
    `ghcr-chart-pull` resolve from the shared GCP Secret Manager values seeded
-   once at platform bootstrap.
+   once at platform bootstrap. Note these values are not
+   recreated automatically: a cluster rebuild leaves the `avwx-api-key` and
+   `ghcr-pull` Secret Manager secrets as empty containers, so they must be
+   re-seeded before any tenant `XTenant` can reach Ready. Do not assume they
+   are always present.
 5. Open a PR following the repository contribution rules.
 6. On merge, the ApplicationSet generates the `tenant-<name>` Application, ArgoCD
    applies the directory in order (namespace -> secrets/limits -> `XTenant`), and
