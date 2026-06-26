@@ -224,7 +224,7 @@ attached and the health endpoint returning `HTTP 200`.
 A five-beat live walkthrough that covers creating a tenant and explaining the
 background processes.
 
-1. Show a tenant directory in git (`tenants/validation/`) and the four files.
+1. Show a tenant directory in git (`tenants/validation/`) and the six files.
    Explain that adding such a directory is the entire onboarding action.
 2. Show the platform doing the work, the
    [responsibility split](#responsibility-split) table on screen, while running
