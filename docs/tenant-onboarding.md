@@ -23,18 +23,20 @@ detects the new directory, applies the tenant manifests and Crossplane
 provisions the database and the application releases. No manual `kubectl` or
 `gcloud` changes are needed on the cluster.
 
-Each tenant directory holds four manifests:
+Each tenant directory holds these manifests:
 
 | File                   | Owner                                         | Purpose                                                                               |
 | ---------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `namespace.yaml`       | ArgoCD                                        | The `tenant-<name>` namespace with platform labels and Pod Security Admission labels. |
 | `runtime-secrets.yaml` | ArgoCD (ESO)                                  | Delivers `api-keys`, `ghcr-pull`, and `ghcr-chart-pull` from Google Secret Manager.   |
 | `resource-limits.yaml` | ArgoCD                                        | The `ResourceQuota` and `LimitRange` for the namespace.                               |
+| `network-policies.yaml` | ArgoCD | The default-deny baseline and the tenant allow rules. |
+| `monitoring.yaml` | ArgoCD | The GMP `PodMonitoring` that scrapes the backend metrics endpoint. |
 | `xtenant.yaml`         | ArgoCD applies it, Crossplane renders from it | The `XTenant` claim that provisions the database, backend, and frontend.              |
 
-The namespace, runtime secrets and resource limits stay ArgoCD-owned in the
-current milestone. The `XTenant` claim is the only part Crossplane expands into
-further resources.
+The namespace, runtime secrets, resource limits, network policies and the
+`PodMonitoring` stay ArgoCD-owned. The `XTenant` claim is the only part
+Crossplane expands into further resources.
 
 ## The tenant claim (`XTenant`)
 
@@ -80,7 +82,8 @@ spec:
 
 1. Copy an existing tenant directory, for example `tenants/validation/`, to
    `tenants/<name>/`. It already contains the namespace baseline, runtime-secret
-   delivery, resource limits, and an `XTenant`. Do not add an
+   delivery, resource limits, network policies, the `PodMonitoring`, and an
+   `XTenant`. Do not add an
    `application.yaml`, the `tenants` ApplicationSet generates the per-tenant
    Application from the directory name.
 2. Rename the namespace to `tenant-<name>` in every file, and set the `XTenant`
