@@ -15,10 +15,16 @@ ArgoCD-owned manifests for now.
   and tenant integration checks.
 - `<tenant>/`: one folder per production tenant.
 
-`application.yaml` is the ArgoCD child Application for this directory. The
-Terraform-owned root App-of-Apps discovers it and this child Application
-reconciles tenant manifests from `tenants/` recursively, including namespace
-baselines and namespaced `XTenant` resources.
+`application.yaml` holds an ArgoCD **ApplicationSet** that generates one child
+Application per tenant directory (named `tenant-<name>`), each reconciling only
+its own `tenants/<name>/` folder. The Terraform-owned root App-of-Apps discovers
+the ApplicationSet. Per-tenant Applications sync and self-heal independently, so
+one tenant stuck provisioning (for example Cloud SQL still creating) 
+does not keep the others from
+reaching Synced/Healthy. `preserveResourcesOnDeletion: true` keeps a tenant's
+namespace, database, and secrets if its Application is ever removed, so
+offboarding a tenant is an explicit, documented cleanup rather than an accidental
+cascade delete.
 
 ## XTenant application stack
 
@@ -219,13 +225,60 @@ Do not print Secret data during validation.
 
 ## Add a tenant
 
-1. Create `tenants/<name>/` with a namespace baseline, runtime-secret delivery,
-   resource limits, and an `XTenant` resource.
-2. Set the namespace and `XTenant` tenant labels/fields to the same short
-   tenant name.
-3. Confirm runtime-secret delivery creates `api-keys`, `ghcr-pull`, and
-   `ghcr-chart-pull` before the `XTenant` is expected to become Ready.
-4. Choose image tags and a hostname under `*.gcp.ajdininfrastructure.lol`.
+1. Copy an existing tenant directory (for example `validation/`) to
+   `tenants/<name>/`. It contains a namespace baseline, runtime-secret delivery,
+   resource limits, and an `XTenant` resource. **Do not add an
+   `application.yaml`** — the `tenants` ApplicationSet generates the per-tenant
+   Application automatically from the directory name.
+2. Rename the namespace to `tenant-<name>` and set the `XTenant` `name`/labels to
+   the same short tenant name; pick the `environment` (`staging`, `validation`,
+   or `production`).
+3. Choose backend/frontend image tags and a hostname under
+   `*.gcp.ajdininfrastructure.lol`.
+4. No per-tenant secret seeding is needed: `api-keys`, `ghcr-pull`, and
+   `ghcr-chart-pull` resolve from the shared GCP Secret Manager values seeded
+   once at platform bootstrap.
 5. Open a PR following the repository contribution rules.
-6. On merge, ArgoCD applies the tenant manifests and Crossplane provisions the
-   database and app releases.
+6. On merge, the ApplicationSet generates the `tenant-<name>` Application, ArgoCD
+   applies the directory in order (namespace -> secrets/limits -> `XTenant`), and
+   Crossplane provisions the database and app releases. Expect roughly ten
+   minutes while Cloud SQL comes up. The Application stays Progressing until then.
+
+## Remove a tenant
+
+The ApplicationSet runs with `preserveResourcesOnDeletion: true`, so deleting a
+tenant directory removes only the `tenant-<name>` Application — it does **not**
+delete the namespace, Cloud SQL instance, or secrets. This is deliberate: it
+stops an accidental directory removal from destroying a billable database.
+Teardown is therefore an explicit operation. Deprovision through Crossplane
+**first**, while the resources are still managed, then remove the git directory:
+
+1. Delete the `XTenant` so Crossplane deprovisions Cloud SQL and the Helm
+   releases (the Composition sets `deletionProtection: false` on the instance):
+
+   ```sh
+   kubectl -n tenant-<name> delete xtenant <name>
+   ```
+
+2. Wait until the composed resources are gone, then confirm no Cloud SQL instance
+   is left billing:
+
+   ```sh
+   kubectl -n tenant-<name> get sqlinstance,databaseinstance,database,user,release
+   gcloud sql instances list   # the tenant instance must be absent
+   ```
+
+3. Delete the namespace to clear the remaining resources (secrets, RBAC, quota,
+   limit range, network policies):
+
+   ```sh
+   kubectl delete namespace tenant-<name>
+   ```
+
+4. Remove `tenants/<name>/` from git and open a PR. On merge the ApplicationSet
+   removes the `tenant-<name>` Application; the resources are already gone, so
+   nothing cascades.
+
+Do step 1 before removing the git directory. If the directory is removed first,
+the Application is deleted but the `XTenant` and Cloud SQL are only orphaned, and
+you still have to run steps 1-3 by hand to stop the database from billing.
